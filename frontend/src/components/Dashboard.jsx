@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useContext, useMemo, useRef } from 'react';
-import { LogOut, Plus, Trash2, ExternalLink, ChevronLeft, BookOpen, ArrowLeft, Settings, LayoutGrid, Rss, Search, Edit2, Check, X, Menu, Type, Loader2 } from 'lucide-react';
+import { LogOut, Plus, Trash2, ExternalLink, ChevronLeft, BookOpen, ArrowLeft, Settings, LayoutGrid, Rss, Search, Edit2, Check, X, Menu, Type, Loader2, Bookmark, BookmarkCheck } from 'lucide-react';
 import api from '../api';
 import { AuthContext } from '../AuthContext';
 
 const Dashboard = () => {
-  const [activeTab, setActiveTab] = useState('articles'); // 'articles', 'feeds', 'settings'
+  const [activeTab, setActiveTab] = useState('articles'); // 'articles', 'feeds', 'settings', 'saved'
   const [feeds, setFeeds] = useState([]);
+  const [savedArticles, setSavedArticles] = useState([]);
   const [newFeed, setNewFeed] = useState({ title: '', url: '' });
   const [selectedFeed, setSelectedFeed] = useState(null);
   
@@ -45,11 +46,14 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchFeeds();
+    fetchSavedArticles();
   }, []);
 
   useEffect(() => {
     if (activeTab === 'articles') {
       resetAndFetchArticles();
+    } else if (activeTab === 'saved') {
+      fetchSavedArticles();
     }
   }, [activeTab, selectedFeed]);
 
@@ -61,6 +65,40 @@ const Dashboard = () => {
       console.error('Failed to fetch feeds');
     }
   };
+
+  const fetchSavedArticles = async () => {
+    try {
+      const res = await api.get('feeds/saved/');
+      setSavedArticles(res.data);
+    } catch (err) {
+      console.error('Failed to fetch saved articles');
+    }
+  };
+
+  const handleToggleSave = async (article, e) => {
+    if (e) e.stopPropagation();
+    const saved = savedArticles.find(a => a.link === article.link);
+    try {
+      if (saved) {
+        await api.delete(`feeds/saved/delete/?link=${encodeURIComponent(article.link)}`);
+        setSavedArticles(prev => prev.filter(a => a.link !== article.link));
+      } else {
+        const res = await api.post('feeds/saved/', {
+          feed_title: article.feed_title,
+          title: article.title,
+          link: article.link,
+          summary: article.summary,
+          published: article.published,
+          timestamp: article.timestamp || 0
+        });
+        setSavedArticles(prev => [res.data, ...prev]);
+      }
+    } catch (err) {
+      alert('Failed to update saved articles');
+    }
+  };
+
+  const isSaved = (link) => savedArticles.some(a => a.link === link);
 
   const resetAndFetchArticles = async () => {
     setArticles([]);
@@ -209,7 +247,12 @@ const Dashboard = () => {
             <ArrowLeft size={16} /> Back
           </button>
           <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">PR FYDD • READ</div>
-          <div className="w-16"></div>
+          <button 
+            onClick={(e) => handleToggleSave(selectedArticle, e)}
+            className={`p-2 transition-all ${isSaved(selectedArticle.link) ? 'text-black' : 'text-gray-300 hover:text-black'} cursor-pointer`}
+          >
+            {isSaved(selectedArticle.link) ? <BookmarkCheck size={20} /> : <Bookmark size={20} />}
+          </button>
         </nav>
         <main className="flex-1 overflow-y-auto p-6 md:p-12 no-scrollbar pb-48">
           <div className="max-w-3xl mx-auto animate-in fade-in duration-500">
@@ -236,7 +279,7 @@ const Dashboard = () => {
           <h1 className="text-3xl font-bold tracking-tighter uppercase">PR FYDD</h1>
         </div>
         <span className="hidden md:block text-[10px] font-bold uppercase tracking-widest text-gray-300">
-          {activeTab === 'articles' ? (selectedFeed ? selectedFeed.title : 'AGGREGATED') : activeTab === 'feeds' ? 'LIBRARY' : 'CONFIG'}
+          {activeTab === 'articles' ? (selectedFeed ? selectedFeed.title : 'AGGREGATED') : activeTab === 'feeds' ? 'LIBRARY' : activeTab === 'saved' ? 'SAVED' : 'CONFIG'}
         </span>
       </nav>
 
@@ -277,6 +320,12 @@ const Dashboard = () => {
                           </div>
                           <h2 className="text-2xl md:text-3xl font-bold uppercase tracking-tight leading-tight group-hover:translate-x-2 transition-transform duration-500">{entry.title || 'Untitled'}</h2>
                         </div>
+                        <button 
+                          onClick={(e) => handleToggleSave(entry, e)}
+                          className={`p-2 transition-all ${isSaved(entry.link) ? 'text-black' : 'text-gray-200 group-hover:text-black'} cursor-pointer`}
+                        >
+                          {isSaved(entry.link) ? <BookmarkCheck size={20} /> : <Bookmark size={20} />}
+                        </button>
                       </div>
                     ))}
                     
@@ -290,6 +339,43 @@ const Dashboard = () => {
                       <p className="text-center py-12 text-[10px] font-bold text-gray-200 uppercase tracking-[0.5em]">End of Stream</p>
                     )}
                     
+                    <div className="h-32" />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Tab Content: Saved Articles */}
+            {activeTab === 'saved' && (
+              <div className="animate-in slide-in-from-right-10 duration-500">
+                <div className="flex justify-between items-end mb-12 pb-4 border-b border-black/5">
+                  <h2 className="text-[10px] font-bold uppercase tracking-[0.3em] text-gray-400">Saved for Later</h2>
+                  <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">{savedArticles.length} ARTICLES</span>
+                </div>
+
+                {savedArticles.length === 0 ? (
+                  <div className="py-24 text-center">
+                    <p className="text-sm italic text-gray-300 uppercase tracking-widest">No Saved Articles.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {savedArticles.map((article, idx) => (
+                      <div key={article.id || idx} onClick={() => setSelectedArticle(article)} className="group cursor-pointer py-10 px-6 border-b border-gray-100 hover:border-black transition-all duration-300 flex justify-between items-center gap-10">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-4">
+                            <span className="text-[10px] font-bold text-black border border-black px-2 py-0.5 uppercase tracking-widest truncate max-w-[120px]">{article.feed_title}</span>
+                            <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">{formatDate(article.published)}</span>
+                          </div>
+                          <h2 className="text-2xl md:text-3xl font-bold uppercase tracking-tight leading-tight group-hover:translate-x-2 transition-transform duration-500">{article.title || 'Untitled'}</h2>
+                        </div>
+                        <button 
+                          onClick={(e) => handleToggleSave(article, e)}
+                          className="p-2 text-black cursor-pointer"
+                        >
+                          <BookmarkCheck size={20} />
+                        </button>
+                      </div>
+                    ))}
                     <div className="h-32" />
                   </div>
                 )}
@@ -371,6 +457,10 @@ const Dashboard = () => {
         <button onClick={() => { setActiveTab('articles'); setSelectedFeed(null); setSelectedArticle(null); }} className={`flex flex-col items-center gap-1 cursor-pointer transition-all ${activeTab === 'articles' ? 'text-black scale-110' : 'text-gray-300'}`}>
           <LayoutGrid size={24} strokeWidth={activeTab === 'articles' ? 2.5 : 2} />
           <span className="text-[8px] font-black uppercase tracking-widest">Articles</span>
+        </button>
+        <button onClick={() => { setActiveTab('saved'); setSelectedFeed(null); setSelectedArticle(null); }} className={`flex flex-col items-center gap-1 cursor-pointer transition-all ${activeTab === 'saved' ? 'text-black scale-110' : 'text-gray-300'}`}>
+          <Bookmark size={24} strokeWidth={activeTab === 'saved' ? 2.5 : 2} />
+          <span className="text-[8px] font-black uppercase tracking-widest">Saved</span>
         </button>
         <button onClick={() => { setActiveTab('feeds'); setSelectedFeed(null); setSelectedArticle(null); }} className={`flex flex-col items-center gap-1 cursor-pointer transition-all ${activeTab === 'feeds' ? 'text-black scale-110' : 'text-gray-300'}`}>
           <Rss size={24} strokeWidth={activeTab === 'feeds' ? 2.5 : 2} />

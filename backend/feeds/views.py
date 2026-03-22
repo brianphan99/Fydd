@@ -3,8 +3,36 @@ import requests
 import time
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
-from .models import Feed
-from .serializers import FeedSerializer
+from .models import Feed, SavedArticle
+from .serializers import FeedSerializer, SavedArticleSerializer
+
+class SavedArticleListCreateView(generics.ListCreateAPIView):
+    serializer_class = SavedArticleSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return SavedArticle.objects.filter(user=self.request.user)
+
+    def post(self, request, *args, **kwargs):
+        link = request.data.get('link')
+        if SavedArticle.objects.filter(user=request.user, link=link).exists():
+             return Response({'error': 'Already saved'}, status=status.HTTP_400_BAD_REQUEST)
+        return super().post(request, *args, **kwargs)
+
+class SavedArticleDeleteView(generics.DestroyAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return SavedArticle.objects.filter(user=self.request.user)
+
+    def delete(self, request, *args, **kwargs):
+        link = request.query_params.get('link')
+        instance = SavedArticle.objects.filter(user=request.user, link=link).first()
+        if instance:
+            self.perform_destroy(instance)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
 
 class FeedListCreateView(generics.ListCreateAPIView):
     serializer_class = FeedSerializer
