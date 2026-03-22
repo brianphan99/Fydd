@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect } from 'react';
 import { jwtDecode } from 'jwt-decode';
+import api from './api';
 
 export const AuthContext = createContext();
 
@@ -27,7 +28,15 @@ export const AuthProvider = ({ children }) => {
     setUser(decoded);
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      const refresh = localStorage.getItem('refresh_token');
+      if (refresh) {
+        await api.post('logout/', { refresh });
+      }
+    } catch (err) {
+      console.error('Logout failed on server');
+    }
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     setUser(null);

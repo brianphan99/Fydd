@@ -26,3 +26,15 @@ class SavedArticle(models.Model):
 
     def __str__(self):
         return self.title
+
+class ReadArticle(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='read_articles')
+    link = models.URLField(max_length=500)
+    feed = models.ForeignKey(Feed, on_delete=models.CASCADE, related_name='read_entries', null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'link')
+
+    def __str__(self):
+        return f"{self.user.username} read {self.link}"

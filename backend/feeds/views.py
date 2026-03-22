@@ -3,8 +3,48 @@ import requests
 import time
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
-from .models import Feed, SavedArticle
-from .serializers import FeedSerializer, SavedArticleSerializer
+from .models import Feed, SavedArticle, ReadArticle
+from .serializers import FeedSerializer, SavedArticleSerializer, ReadArticleSerializer
+
+class MarkArticleReadView(generics.CreateAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        link = request.data.get('link')
+        feed_id = request.data.get('feed_id')
+        if not link:
+             return Response({'error': 'Link required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        feed = None
+        if feed_id:
+            feed = Feed.objects.filter(id=feed_id, user=request.user).first()
+            
+        ReadArticle.objects.get_or_create(user=request.user, link=link, defaults={'feed': feed})
+        return Response(status=status.HTTP_200_OK)
+
+class MarkFeedReadView(generics.CreateAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        feed_id = request.data.get('feed_id')
+        
+        view_instance = FeedContentView()
+        
+        if feed_id:
+            feeds = Feed.objects.filter(id=feed_id, user=request.user)
+        else:
+            feeds = Feed.objects.filter(user=request.user)
+            
+        for feed in feeds:
+            data = view_instance.parse_feed_url(feed.url, feed.title)
+            for entry in data['entries']:
+                ReadArticle.objects.get_or_create(
+                    user=request.user, 
+                    link=entry['link'], 
+                    defaults={'feed': feed}
+                )
+            
+        return Response(status=status.HTTP_200_OK)
 
 class SavedArticleListCreateView(generics.ListCreateAPIView):
     serializer_class = SavedArticleSerializer
@@ -21,6 +61,7 @@ class SavedArticleListCreateView(generics.ListCreateAPIView):
 
 class SavedArticleDeleteView(generics.DestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
+    lookup_field = 'link'
 
     def get_queryset(self):
         return SavedArticle.objects.filter(user=self.request.user)
@@ -33,13 +74,29 @@ class SavedArticleDeleteView(generics.DestroyAPIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_404_NOT_FOUND)
 
-
 class FeedListCreateView(generics.ListCreateAPIView):
     serializer_class = FeedSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         return Feed.objects.filter(user=self.request.user)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        data = serializer.data
+        
+        # Calculate unread counts
+        read_links = set(ReadArticle.objects.filter(user=request.user).values_list('link', flat=True))
+        
+        view_instance = FeedContentView()
+        for feed_data in data:
+            feed_obj = Feed.objects.get(id=feed_data['id'])
+            parsed = view_instance.parse_feed_url(feed_obj.url, feed_obj.title)
+            unread = [e for e in parsed['entries'] if e['link'] not in read_links]
+            feed_data['unread_count'] = len(unread)
+            
+        return Response(data)
 
 class FeedDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = FeedSerializer
@@ -57,10 +114,20 @@ class FeedContentView(generics.RetrieveAPIView):
     def get(self, request, *args, **kwargs):
         feed_obj = self.get_object()
         offset = int(request.query_params.get('offset', 0))
+        unread_only = request.query_params.get('unread_only') == 'true'
         limit = 10
         
         data = self.parse_feed_url(feed_obj.url, feed_obj.title)
         entries = data['entries']
+        
+        read_links = set(ReadArticle.objects.filter(user=request.user).values_list('link', flat=True))
+        
+        for entry in entries:
+            entry['is_read'] = entry['link'] in read_links
+            entry['feed_id'] = feed_obj.id
+
+        if unread_only:
+            entries = [e for e in entries if not e['is_read']]
         
         # Slicing for pagination
         paginated_entries = entries[offset : offset + limit]
@@ -129,15 +196,23 @@ class AggregatedFeedContentView(generics.ListAPIView):
 
     def get(self, request, *args, **kwargs):
         offset = int(request.query_params.get('offset', 0))
+        unread_only = request.query_params.get('unread_only') == 'true'
         limit = 10
         
         user_feeds = Feed.objects.filter(user=request.user)
         all_entries = []
         
         view_instance = FeedContentView()
+        read_links = set(ReadArticle.objects.filter(user=request.user).values_list('link', flat=True))
+
         for feed_obj in user_feeds:
             data = view_instance.parse_feed_url(feed_obj.url, feed_obj.title)
-            all_entries.extend(data['entries'])
+            for entry in data['entries']:
+                entry['is_read'] = entry['link'] in read_links
+                entry['feed_id'] = feed_obj.id
+                if unread_only and entry['is_read']:
+                    continue
+                all_entries.append(entry)
         
         # Global sort across all feeds
         all_entries.sort(key=lambda x: x['timestamp'], reverse=True)

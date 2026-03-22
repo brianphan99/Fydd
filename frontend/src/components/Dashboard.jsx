@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useMemo, useRef } from 'react';
-import { LogOut, Plus, Trash2, ExternalLink, ChevronLeft, BookOpen, ArrowLeft, Settings, LayoutGrid, Rss, Search, Edit2, Check, X, Menu, Type, Loader2, Bookmark, BookmarkCheck } from 'lucide-react';
+import { LogOut, Plus, Trash2, ExternalLink, ChevronLeft, BookOpen, ArrowLeft, Settings, LayoutGrid, Rss, Search, Edit2, Check, X, Menu, Type, Loader2, Bookmark, BookmarkCheck, Eye, EyeOff } from 'lucide-react';
 import api from '../api';
 import { AuthContext } from '../AuthContext';
 
@@ -17,9 +17,14 @@ const Dashboard = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+  const [unreadOnly, setUnreadOnly] = useState(true);
   
   const [selectedArticle, setSelectedArticle] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  
+  // Context Menu state
+  const [contextMenu, setContextMenu] = useState(null); // { x, y, feedId }
+  const [markingReadId, setMarkingReadId] = useState(null); // ID of feed being marked as read
   
   // Search & Edit states
   const [searchQuery, setSearchQuery] = useState('');
@@ -27,7 +32,6 @@ const Dashboard = () => {
   const [editForm, setEditForm] = useState({ title: '', url: '' });
   
   const { user, logout } = useContext(AuthContext);
-  const scrollRef = useRef(null);
 
   const formatDate = (dateStr) => {
     if (!dateStr) return 'RECENT';
@@ -55,7 +59,7 @@ const Dashboard = () => {
     } else if (activeTab === 'saved') {
       fetchSavedArticles();
     }
-  }, [activeTab, selectedFeed]);
+  }, [activeTab, selectedFeed, unreadOnly]);
 
   const fetchFeeds = async () => {
     try {
@@ -100,6 +104,38 @@ const Dashboard = () => {
 
   const isSaved = (link) => savedArticles.some(a => a.link === link);
 
+  const handleMarkAsRead = async (article) => {
+    if (article.is_read) return;
+    try {
+      await api.post('feeds/mark-read/', { 
+        link: article.link,
+        feed_id: article.feed_id
+      });
+      setArticles(prev => prev.map(a => a.link === article.link ? { ...a, is_read: true } : a));
+      fetchFeeds();
+    } catch (err) {
+      console.error('Failed to mark as read');
+    }
+  };
+
+  const handleMarkFeedAsRead = async (feedId) => {
+    setMarkingReadId(feedId === null ? 'all' : feedId);
+    setContextMenu(null);
+    try {
+      await api.post('feeds/mark-feed-read/', { feed_id: feedId });
+      if (feedId) {
+        setArticles(prev => prev.map(a => a.feed_id === feedId ? { ...a, is_read: true } : a));
+      } else {
+        setArticles(prev => prev.map(a => ({ ...a, is_read: true })));
+      }
+      await fetchFeeds();
+    } catch (err) {
+      console.error('Failed to mark feed as read');
+    } finally {
+      setMarkingReadId(null);
+    }
+  };
+
   const resetAndFetchArticles = async () => {
     setArticles([]);
     setOffset(0);
@@ -113,8 +149,8 @@ const Dashboard = () => {
 
     try {
       const endpoint = selectedFeed 
-        ? `feeds/${selectedFeed.id}/content/?offset=${currentOffset}`
-        : `feeds/all-content/?offset=${currentOffset}`;
+        ? `feeds/${selectedFeed.id}/content/?offset=${currentOffset}&unread_only=${unreadOnly}`
+        : `feeds/all-content/?offset=${currentOffset}&unread_only=${unreadOnly}`;
       
       const res = await api.get(endpoint);
       
@@ -184,6 +220,15 @@ const Dashboard = () => {
     setSidebarOpen(false);
   };
 
+  const handleContextMenu = (e, feedId) => {
+    e.preventDefault();
+    setContextMenu({
+      x: e.pageX,
+      y: e.pageY,
+      feedId: feedId
+    });
+  };
+
   const filteredFeeds = useMemo(() => {
     return feeds.filter(f => 
       f.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -215,9 +260,17 @@ const Dashboard = () => {
       <div className="flex-1 overflow-y-auto no-scrollbar px-4 space-y-1 pb-64">
         <button 
           onClick={() => { setSelectedFeed(null); setSidebarOpen(false); }}
+          onContextMenu={(e) => handleContextMenu(e, null)}
           className={`w-full text-left p-3 transition-all flex justify-between items-center cursor-pointer ${!selectedFeed ? 'bg-black text-white' : 'hover:bg-gray-50 text-gray-500'}`}
         >
-          <span className="text-[10px] font-bold uppercase tracking-widest">Aggregated</span>
+          <div className="flex flex-col">
+            <span className="text-[10px] font-bold uppercase tracking-widest">Aggregated</span>
+            {markingReadId === 'all' && (
+              <span className="text-[8px] font-black flex items-center gap-1 animate-pulse opacity-50">
+                <Loader2 size={8} className="animate-spin" /> MARKING ALL AS READ...
+              </span>
+            )}
+          </div>
           <LayoutGrid size={14} />
         </button>
         <div className="pt-4 pb-2 text-[8px] font-bold text-gray-300 uppercase tracking-[0.3em] px-3">Your Feeds</div>
@@ -225,9 +278,19 @@ const Dashboard = () => {
           <button 
             key={feed.id}
             onClick={() => handleSelectFeed(feed)}
+            onContextMenu={(e) => handleContextMenu(e, feed.id)}
             className={`w-full text-left p-3 transition-all flex justify-between items-center cursor-pointer ${selectedFeed?.id === feed.id ? 'bg-black text-white font-bold' : 'hover:bg-gray-50 text-gray-500 font-bold'}`}
           >
-            <span className="text-[10px] uppercase tracking-widest truncate mr-2">{feed.title}</span>
+            <div className="flex flex-col truncate mr-2">
+              <span className="text-[10px] uppercase tracking-widest truncate">{feed.title}</span>
+              {markingReadId === feed.id ? (
+                <span className={`text-[8px] font-black flex items-center gap-1 animate-pulse ${selectedFeed?.id === feed.id ? 'text-white/50' : 'text-black/30'}`}>
+                  <Loader2 size={8} className="animate-spin" /> SYNCING READ STATUS...
+                </span>
+              ) : feed.unread_count > 0 && (
+                <span className={`text-[8px] font-black ${selectedFeed?.id === feed.id ? 'text-white/50' : 'text-black/30'}`}>{feed.unread_count} UNREAD</span>
+              )}
+            </div>
             <Rss size={12} className="shrink-0 opacity-50" />
           </button>
         ))}
@@ -271,7 +334,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="h-screen bg-white text-black font-sans flex flex-col overflow-hidden">
+    <div className="h-screen bg-white text-black font-sans flex flex-col overflow-hidden" onClick={() => setContextMenu(null)}>
       {/* Header */}
       <nav className="border-b border-black p-6 flex justify-between items-center bg-white z-40 shrink-0">
         <div className="flex items-center gap-4">
@@ -292,9 +355,18 @@ const Dashboard = () => {
             {activeTab === 'articles' && (
               <div>
                 <div className="flex justify-between items-end mb-12 pb-4 border-b border-black/5">
-                  <h2 className="text-[10px] font-bold uppercase tracking-[0.3em] text-gray-400">
-                    {selectedFeed ? 'SOURCE: ' + selectedFeed.title : 'AGGREGATED STREAM'}
-                  </h2>
+                  <div className="flex flex-col gap-2">
+                    <h2 className="text-[10px] font-bold uppercase tracking-[0.3em] text-gray-400">
+                      {selectedFeed ? 'SOURCE: ' + selectedFeed.title : 'AGGREGATED STREAM'}
+                    </h2>
+                    <button 
+                      onClick={() => setUnreadOnly(!unreadOnly)}
+                      className={`flex items-center gap-2 text-[8px] font-black uppercase tracking-widest px-2 py-1 border transition-all ${unreadOnly ? 'bg-black text-white border-black' : 'text-gray-300 border-gray-100 hover:border-gray-300'}`}
+                    >
+                      {unreadOnly ? <EyeOff size={10} /> : <Eye size={10} />}
+                      {unreadOnly ? 'Unread Only' : 'Showing All'}
+                    </button>
+                  </div>
                   <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">
                     {articles.length} LOADED
                   </span>
@@ -312,9 +384,14 @@ const Dashboard = () => {
                 ) : (
                   <div className="space-y-2">
                     {articles.map((entry, idx) => (
-                      <div key={idx} onClick={() => setSelectedArticle(entry)} className="group cursor-pointer py-10 px-6 border-b border-gray-100 hover:border-black transition-all duration-300 flex justify-between items-center gap-10">
+                      <div 
+                        key={idx} 
+                        onClick={() => { setSelectedArticle(entry); handleMarkAsRead(entry); }} 
+                        className={`group cursor-pointer py-10 px-6 border-b border-gray-100 hover:border-black transition-all duration-300 flex justify-between items-center gap-10 ${entry.is_read ? 'opacity-40' : 'opacity-100'}`}
+                      >
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-4">
+                            {!entry.is_read && <div className="w-2 h-2 bg-black rounded-full" />}
                             <span className="text-[10px] font-bold text-black border border-black px-2 py-0.5 uppercase tracking-widest truncate max-w-[120px]">{entry.feed_title}</span>
                             <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">{formatDate(entry.published)}</span>
                           </div>
@@ -451,6 +528,21 @@ const Dashboard = () => {
           </div>
         </main>
       </div>
+
+      {/* Context Menu */}
+      {contextMenu && (
+        <div 
+          className="fixed z-[100] bg-white border border-black shadow-xl py-2 w-48 animate-in fade-in zoom-in-95 duration-200"
+          style={{ top: contextMenu.y, left: contextMenu.x }}
+        >
+          <button 
+            onClick={() => handleMarkFeedAsRead(contextMenu.feedId)}
+            className="w-full text-left px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:bg-black hover:text-white transition-colors flex items-center gap-3"
+          >
+            <Eye size={14} /> Mark all as read
+          </button>
+        </div>
+      )}
 
       {/* Bottom Nav */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-black flex justify-around items-center p-4 z-50 shadow-2xl">
