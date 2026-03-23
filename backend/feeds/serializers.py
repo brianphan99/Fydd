@@ -9,6 +9,10 @@ class FeedSerializer(serializers.ModelSerializer):
         fields = ['id', 'user', 'title', 'url', 'created_at', 'unread_count']
         read_only_fields = ['user', 'created_at']
 
+    def create(self, validated_data):
+        validated_data['user'] = self.context['request'].user
+        return super().create(validated_data)
+
 class SavedArticleSerializer(serializers.ModelSerializer):
     class Meta:
         model = SavedArticle

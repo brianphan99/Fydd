@@ -25,6 +25,7 @@ const Dashboard = () => {
   // Context Menu state
   const [contextMenu, setContextMenu] = useState(null); // { x, y, feedId }
   const [markingReadId, setMarkingReadId] = useState(null); // ID of feed being marked as read
+  const [isAddingFeed, setIsAddingFeed] = useState(false);
   
   // Search & Edit states
   const [searchQuery, setSearchQuery] = useState('');
@@ -175,12 +176,15 @@ const Dashboard = () => {
 
   const handleAddFeed = async (e) => {
     e.preventDefault();
+    setIsAddingFeed(true);
     try {
       await api.post('feeds/', newFeed);
       setNewFeed({ title: '', url: '' });
-      fetchFeeds();
+      await fetchFeeds();
     } catch (err) {
       alert('Failed to add feed');
+    } finally {
+      setIsAddingFeed(false);
     }
   };
 
@@ -264,10 +268,10 @@ const Dashboard = () => {
           className={`w-full text-left p-3 transition-all flex justify-between items-center cursor-pointer ${!selectedFeed ? 'bg-black text-white' : 'hover:bg-gray-50 text-gray-500'}`}
         >
           <div className="flex flex-col">
-            <span className="text-[10px] font-bold uppercase tracking-widest">Aggregated</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest">All Feeds</span>
             {markingReadId === 'all' && (
-              <span className="text-[8px] font-black flex items-center gap-1 animate-pulse opacity-50">
-                <Loader2 size={8} className="animate-spin" /> MARKING ALL AS READ...
+              <span className="text-[8px] font-black flex items-center gap-1 animate-pulse opacity-20">
+                <Loader2 size={8} className="animate-spin" /> LOADING...
               </span>
             )}
           </div>
@@ -284,8 +288,8 @@ const Dashboard = () => {
             <div className="flex flex-col truncate mr-2">
               <span className="text-[10px] uppercase tracking-widest truncate">{feed.title}</span>
               {markingReadId === feed.id ? (
-                <span className={`text-[8px] font-black flex items-center gap-1 animate-pulse ${selectedFeed?.id === feed.id ? 'text-white/50' : 'text-black/30'}`}>
-                  <Loader2 size={8} className="animate-spin" /> SYNCING READ STATUS...
+                <span className={`text-[8px] font-black flex items-center gap-1 animate-pulse ${selectedFeed?.id === feed.id ? 'text-white/20' : 'text-black/20'}`}>
+                  <Loader2 size={8} className="animate-spin" /> LOADING...
                 </span>
               ) : feed.unread_count > 0 && (
                 <span className={`text-[8px] font-black ${selectedFeed?.id === feed.id ? 'text-white/50' : 'text-black/30'}`}>{feed.unread_count} UNREAD</span>
@@ -342,7 +346,7 @@ const Dashboard = () => {
           <h1 className="text-3xl font-bold tracking-tighter uppercase">PR FYDD</h1>
         </div>
         <span className="hidden md:block text-[10px] font-bold uppercase tracking-widest text-gray-300">
-          {activeTab === 'articles' ? (selectedFeed ? selectedFeed.title : 'AGGREGATED') : activeTab === 'feeds' ? 'LIBRARY' : activeTab === 'saved' ? 'SAVED' : 'CONFIG'}
+          {activeTab === 'articles' ? (selectedFeed ? selectedFeed.title : 'ALL FEEDS') : activeTab === 'feeds' ? 'LIBRARY' : activeTab === 'saved' ? 'SAVED' : 'CONFIG'}
         </span>
       </nav>
 
@@ -357,7 +361,7 @@ const Dashboard = () => {
                 <div className="flex justify-between items-end mb-12 pb-4 border-b border-black/5">
                   <div className="flex flex-col gap-2">
                     <h2 className="text-[10px] font-bold uppercase tracking-[0.3em] text-gray-400">
-                      {selectedFeed ? 'SOURCE: ' + selectedFeed.title : 'AGGREGATED STREAM'}
+                      {selectedFeed ? 'SOURCE: ' + selectedFeed.title : 'ALL FEEDS STREAM'}
                     </h2>
                     <button 
                       onClick={() => setUnreadOnly(!unreadOnly)}
@@ -408,7 +412,7 @@ const Dashboard = () => {
                     
                     {loadingMore && (
                       <div className="flex justify-center py-12">
-                        <Loader2 className="animate-spin text-gray-200" size={24} />
+                        <Loader2 className="animate-spin text-black" size={24} />
                       </div>
                     )}
                     
@@ -468,7 +472,18 @@ const Dashboard = () => {
                     <form onSubmit={handleAddFeed} className="flex flex-col md:flex-row gap-6 p-6 border-2 border-black bg-white shadow-lg">
                       <input type="text" placeholder="TITLE" value={newFeed.title} onChange={(e) => setNewFeed({ ...newFeed, title: e.target.value })} className="flex-1 border-b border-black py-2 focus:outline-none uppercase text-xs tracking-widest font-bold" required />
                       <input type="url" placeholder="URL" value={newFeed.url} onChange={(e) => setNewFeed({ ...newFeed, url: e.target.value })} className="flex-1 border-b border-black py-2 focus:outline-none text-xs tracking-widest" required />
-                      <button type="submit" className="bg-black text-white px-8 py-3 font-bold uppercase text-[10px] tracking-widest hover:bg-gray-800 transition-all cursor-pointer whitespace-nowrap">Connect</button>
+                      <button 
+                        type="submit" 
+                        disabled={isAddingFeed}
+                        className={`bg-black text-white px-8 py-3 font-bold uppercase text-[10px] tracking-widest hover:bg-gray-800 transition-all cursor-pointer whitespace-nowrap flex items-center gap-3 ${isAddingFeed ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      >
+                        {isAddingFeed ? (
+                          <>
+                            <Loader2 size={12} className="animate-spin" />
+                            Connecting...
+                          </>
+                        ) : 'Connect'}
+                      </button>
                     </form>
                   </section>
                   <div className="flex flex-col md:flex-row justify-between items-center gap-6 pt-2">
