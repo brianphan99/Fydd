@@ -1,6 +1,7 @@
 import feedparser
 import requests
 import time
+from concurrent.futures import ThreadPoolExecutor
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from .models import Feed, SavedArticle, ReadArticle
@@ -90,11 +91,18 @@ class FeedListCreateView(generics.ListCreateAPIView):
         read_links = set(ReadArticle.objects.filter(user=request.user).values_list('link', flat=True))
         
         view_instance = FeedContentView()
-        for feed_data in data:
-            feed_obj = Feed.objects.get(id=feed_data['id'])
-            parsed = view_instance.parse_feed_url(feed_obj.url, feed_obj.title)
-            unread = [e for e in parsed['entries'] if e['link'] not in read_links]
-            feed_data['unread_count'] = len(unread)
+        
+        def process_feed(feed_data):
+            try:
+                feed_obj = Feed.objects.get(id=feed_data['id'])
+                parsed = view_instance.parse_feed_url(feed_obj.url, feed_obj.title)
+                unread = [e for e in parsed['entries'] if e['link'] not in read_links]
+                feed_data['unread_count'] = len(unread)
+            except Exception:
+                feed_data['unread_count'] = 0
+
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            executor.map(process_feed, data)
             
         return Response(data)
 
@@ -121,9 +129,11 @@ class FeedContentView(generics.RetrieveAPIView):
         entries = data['entries']
         
         read_links = set(ReadArticle.objects.filter(user=request.user).values_list('link', flat=True))
+        saved_links = set(SavedArticle.objects.filter(user=request.user).values_list('link', flat=True))
         
         for entry in entries:
             entry['is_read'] = entry['link'] in read_links
+            entry['is_saved'] = entry['link'] in saved_links
             entry['feed_id'] = feed_obj.id
 
         if unread_only:
@@ -222,19 +232,37 @@ class AggregatedFeedContentView(generics.ListAPIView):
         limit = 10
         
         user_feeds = Feed.objects.filter(user=request.user)
-        all_entries = []
+        unique_entries = {}
         
         view_instance = FeedContentView()
         read_links = set(ReadArticle.objects.filter(user=request.user).values_list('link', flat=True))
+        saved_links = set(SavedArticle.objects.filter(user=request.user).values_list('link', flat=True))
 
-        for feed_obj in user_feeds:
+        def fetch_and_process(feed_obj):
             data = view_instance.parse_feed_url(feed_obj.url, feed_obj.title)
+            results = []
             for entry in data['entries']:
                 entry['is_read'] = entry['link'] in read_links
+                entry['is_saved'] = entry['link'] in saved_links
                 entry['feed_id'] = feed_obj.id
                 if unread_only and entry['is_read']:
                     continue
-                all_entries.append(entry)
+                results.append(entry)
+            return results
+
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            future_to_feed = [executor.submit(fetch_and_process, feed) for feed in user_feeds]
+            for future in future_to_feed:
+                try:
+                    entries = future.result()
+                    for entry in entries:
+                        link = entry['link']
+                        if link not in unique_entries:
+                            unique_entries[link] = entry
+                except Exception:
+                    continue
+        
+        all_entries = list(unique_entries.values())
         
         # Global sort across all feeds
         all_entries.sort(key=lambda x: x['timestamp'], reverse=True)

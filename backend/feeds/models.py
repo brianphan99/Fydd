@@ -15,7 +15,7 @@ class SavedArticle(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='saved_articles')
     feed_title = models.CharField(max_length=255)
     title = models.CharField(max_length=255)
-    link = models.URLField()
+    link = models.URLField(max_length=1000)
     summary = models.TextField(blank=True)
     thumbnail = models.URLField(max_length=1000, blank=True, null=True)
     published = models.CharField(max_length=100, blank=True)

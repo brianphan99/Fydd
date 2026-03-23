@@ -3,6 +3,7 @@ from .models import Feed, SavedArticle, ReadArticle
 
 class FeedSerializer(serializers.ModelSerializer):
     unread_count = serializers.IntegerField(read_only=True, default=0)
+    title = serializers.CharField(required=False, allow_blank=True)
 
     class Meta:
         model = Feed
@@ -11,6 +12,18 @@ class FeedSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data['user'] = self.context['request'].user
+        
+        if not validated_data.get('title'):
+            # Lazy import to avoid circular dependency
+            from .views import FeedContentView
+            view = FeedContentView()
+            url = validated_data.get('url')
+            try:
+                parsed = view.parse_feed_url(url, 'New Feed')
+                validated_data['title'] = parsed.get('title', 'New Feed')
+            except Exception:
+                validated_data['title'] = 'New Feed'
+                
         return super().create(validated_data)
 
 class SavedArticleSerializer(serializers.ModelSerializer):
