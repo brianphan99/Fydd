@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useMemo, useRef } from 'react';
-import { LogOut, Plus, Trash2, ExternalLink, ChevronLeft, BookOpen, ArrowLeft, Settings, LayoutGrid, Rss, Search, Edit2, Check, X, Menu, Type, Loader2, Bookmark, BookmarkCheck, Eye, EyeOff } from 'lucide-react';
+import { LogOut, Plus, Trash2, ExternalLink, ChevronLeft, BookOpen, ArrowLeft, Settings, LayoutGrid, Rss, Search, Edit2, Check, X, Menu, Type, Loader2, Bookmark, BookmarkCheck, Eye, EyeOff, Image as ImageIcon } from 'lucide-react';
 import api from '../api';
 import { AuthContext } from '../AuthContext';
 
@@ -93,6 +93,7 @@ const Dashboard = () => {
           title: article.title,
           link: article.link,
           summary: article.summary,
+          thumbnail: article.thumbnail,
           published: article.published,
           timestamp: article.timestamp || 0
         });
@@ -325,6 +326,17 @@ const Dashboard = () => {
           <div className="max-w-3xl mx-auto animate-in fade-in duration-500">
             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-6">{selectedArticle.feed_title} • {formatDate(selectedArticle.published)}</span>
             <h1 className="text-4xl md:text-5xl font-bold uppercase tracking-tight leading-tight mb-12">{selectedArticle.title || 'Untitled Article'}</h1>
+            
+            {selectedArticle.thumbnail && (
+              <div className="mb-16 border-4 border-black overflow-hidden bg-gray-50 shadow-2xl">
+                <img 
+                  src={selectedArticle.thumbnail} 
+                  alt={selectedArticle.title} 
+                  className="w-full h-auto object-cover"
+                />
+              </div>
+            )}
+
             <div 
               className="text-gray-800 text-lg leading-relaxed mb-16 prose prose-lg max-w-none prose-p:mb-6 prose-a:text-black prose-a:font-bold prose-img:mx-auto prose-img:my-12"
               dangerouslySetInnerHTML={{ __html: selectedArticle.summary }}
@@ -391,7 +403,7 @@ const Dashboard = () => {
                       <div 
                         key={idx} 
                         onClick={() => { setSelectedArticle(entry); handleMarkAsRead(entry); }} 
-                        className={`group cursor-pointer py-10 px-6 border-b border-gray-100 hover:border-black transition-all duration-300 flex justify-between items-center gap-10 ${entry.is_read ? 'opacity-40' : 'opacity-100'}`}
+                        className={`group cursor-pointer py-10 px-6 border-b border-gray-100 hover:border-black transition-all duration-300 flex justify-between items-start gap-10 ${entry.is_read ? 'opacity-40' : 'opacity-100'}`}
                       >
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-4">
@@ -401,12 +413,20 @@ const Dashboard = () => {
                           </div>
                           <h2 className="text-2xl md:text-3xl font-bold uppercase tracking-tight leading-tight group-hover:translate-x-2 transition-transform duration-500">{entry.title || 'Untitled'}</h2>
                         </div>
-                        <button 
-                          onClick={(e) => handleToggleSave(entry, e)}
-                          className={`p-2 transition-all ${isSaved(entry.link) ? 'text-black' : 'text-gray-200 group-hover:text-black'} cursor-pointer`}
-                        >
-                          {isSaved(entry.link) ? <BookmarkCheck size={20} /> : <Bookmark size={20} />}
-                        </button>
+                        
+                        <div className="flex items-center gap-8 self-center">
+                          {entry.thumbnail && (
+                            <div className="hidden md:block w-40 h-40 shrink-0 border-2 border-black/10 group-hover:border-black transition-colors overflow-hidden bg-gray-50">
+                              <img src={entry.thumbnail} alt="" className="w-full h-full object-cover" />
+                            </div>
+                          )}
+                          <button 
+                            onClick={(e) => handleToggleSave(entry, e)}
+                            className={`p-2 transition-all ${isSaved(entry.link) ? 'text-black' : 'text-gray-200 group-hover:text-black'} cursor-pointer`}
+                          >
+                            {isSaved(entry.link) ? <BookmarkCheck size={20} /> : <Bookmark size={20} />}
+                          </button>
+                        </div>
                       </div>
                     ))}
                     
@@ -441,7 +461,7 @@ const Dashboard = () => {
                 ) : (
                   <div className="space-y-2">
                     {savedArticles.map((article, idx) => (
-                      <div key={article.id || idx} onClick={() => setSelectedArticle(article)} className="group cursor-pointer py-10 px-6 border-b border-gray-100 hover:border-black transition-all duration-300 flex justify-between items-center gap-10">
+                      <div key={article.id || idx} onClick={() => setSelectedArticle(article)} className="group cursor-pointer py-10 px-6 border-b border-gray-100 hover:border-black transition-all duration-300 flex justify-between items-start gap-10">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-4">
                             <span className="text-[10px] font-bold text-black border border-black px-2 py-0.5 uppercase tracking-widest truncate max-w-[120px]">{article.feed_title}</span>
@@ -449,12 +469,19 @@ const Dashboard = () => {
                           </div>
                           <h2 className="text-2xl md:text-3xl font-bold uppercase tracking-tight leading-tight group-hover:translate-x-2 transition-transform duration-500">{article.title || 'Untitled'}</h2>
                         </div>
-                        <button 
-                          onClick={(e) => handleToggleSave(article, e)}
-                          className="p-2 text-black cursor-pointer"
-                        >
-                          <BookmarkCheck size={20} />
-                        </button>
+                        <div className="flex items-center gap-8 self-center">
+                          {article.thumbnail && (
+                            <div className="hidden md:block w-40 h-40 shrink-0 border-2 border-black/10 group-hover:border-black transition-colors overflow-hidden bg-gray-50">
+                              <img src={article.thumbnail} alt="" className="w-full h-full object-cover" />
+                            </div>
+                          )}
+                          <button 
+                            onClick={(e) => handleToggleSave(article, e)}
+                            className="p-2 text-black cursor-pointer"
+                          >
+                            <BookmarkCheck size={20} />
+                          </button>
+                        </div>
                       </div>
                     ))}
                     <div className="h-32" />

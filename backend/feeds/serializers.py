@@ -16,7 +16,7 @@ class FeedSerializer(serializers.ModelSerializer):
 class SavedArticleSerializer(serializers.ModelSerializer):
     class Meta:
         model = SavedArticle
-        fields = ['id', 'user', 'feed_title', 'title', 'link', 'summary', 'published', 'timestamp', 'created_at']
+        fields = ['id', 'user', 'feed_title', 'title', 'link', 'summary', 'thumbnail', 'published', 'timestamp', 'created_at']
         read_only_fields = ['user', 'created_at']
 
     def create(self, validated_data):

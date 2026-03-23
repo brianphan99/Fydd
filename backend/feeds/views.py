@@ -172,11 +172,33 @@ class FeedContentView(generics.RetrieveAPIView):
                 if timestamp < cutoff_timestamp:
                     continue
 
+                # Extract Thumbnail
+                thumbnail = None
+                # Check media content
+                if 'media_content' in entry and len(entry.media_content) > 0:
+                    thumbnail = entry.media_content[0].get('url')
+                # Check media thumbnail
+                if not thumbnail and 'media_thumbnail' in entry and len(entry.media_thumbnail) > 0:
+                    thumbnail = entry.media_thumbnail[0].get('url')
+                # Check enclosures
+                if not thumbnail and 'enclosures' in entry:
+                    for enc in entry.enclosures:
+                        if enc.get('type', '').startswith('image/'):
+                            thumbnail = enc.get('href')
+                            break
+                # Check links
+                if not thumbnail and 'links' in entry:
+                    for link in entry.links:
+                        if link.get('rel') == 'enclosure' and link.get('type', '').startswith('image/'):
+                            thumbnail = link.get('href')
+                            break
+
                 entries.append({
                     'feed_title': parsed_feed.feed.get('title', default_title),
                     'title': entry.get('title', 'No Title'),
                     'link': entry.get('link', ''),
                     'summary': content,
+                    'thumbnail': thumbnail,
                     'published': entry.get('published', entry.get('updated', '')),
                     'timestamp': timestamp
                 })
