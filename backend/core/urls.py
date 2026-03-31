@@ -20,13 +20,15 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
-from feeds.auth_views import RegisterView, LogoutView
+from feeds.auth_views import RegisterView, LogoutView, GoogleAuthView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/register/', RegisterView.as_view(), name='register'),
+    path('api/login/google/', GoogleAuthView.as_view(), name='google-auth'),
     path('api/logout/', LogoutView.as_view(), name='logout'),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/feeds/', include('feeds.urls')),
+    path('api/password_reset/', include('django_rest_passwordreset.urls', namespace='password_reset')),
 ]
