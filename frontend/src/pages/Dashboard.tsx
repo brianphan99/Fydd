@@ -4,6 +4,7 @@ import { AuthContext } from '../AuthContext';
 import { useFeeds } from '../hooks/useFeeds';
 import { useArticles } from '../hooks/useArticles';
 import { Feed, Article } from '../types';
+import { useConfirmation } from '../ConfirmationContext';
 
 // Components
 import Header from '../features/navigation/components/Header';
@@ -16,6 +17,7 @@ import FeedList from '../features/feeds/components/FeedList';
 import SettingsView from '../features/settings/components/SettingsView';
 
 const Dashboard = () => {
+  const { confirm } = useConfirmation();
   const [activeTab, setActiveTab] = useState('articles');
   const [selectedFeed, setSelectedFeed] = useState<Feed | null>(null);
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
@@ -129,7 +131,16 @@ const Dashboard = () => {
   };
 
   const handleDeleteFeedAction = async (id: number) => {
-    if (!window.confirm('Delete this feed and all its articles?')) return;
+    const confirmed = await confirm({
+      title: 'Delete Feed',
+      message: 'Delete this feed and all its articles? This action cannot be undone.',
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel',
+      isDestructive: true
+    });
+
+    if (!confirmed) return;
+    
     setDeletingId(id);
     try {
       await deleteFeed(id);
@@ -174,13 +185,13 @@ const Dashboard = () => {
           />
         )}
 
-        <main 
-          onScroll={activeTab === 'articles' ? handleScroll : undefined} 
-          className="flex-1 overflow-y-auto no-scrollbar"
-        >
-          <div className="max-w-4xl mx-auto p-6 md:p-12 pb-64">
-            {activeTab === 'articles' && (
-              <div>
+        <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          {activeTab === 'articles' && (
+            <div 
+              onScroll={handleScroll}
+              className="flex-1 overflow-y-auto no-scrollbar"
+            >
+              <div className="max-w-4xl mx-auto p-6 md:p-12 pb-64">
                 <div className="flex justify-between items-end mb-12 pb-4 border-b border-black/5">
                   <div className="flex flex-col gap-2">
                     <h2 className="text-[10px] font-bold uppercase tracking-[0.3em] text-gray-400">
@@ -210,10 +221,12 @@ const Dashboard = () => {
                   formatDate={formatDate}
                 />
               </div>
-            )}
+            </div>
+          )}
 
-            {activeTab === 'saved' && (
-              <div className="animate-in slide-in-from-right-10 duration-500">
+          {activeTab === 'saved' && (
+            <div className="flex-1 overflow-y-auto no-scrollbar animate-in slide-in-from-right-10 duration-500">
+              <div className="max-w-4xl mx-auto p-6 md:p-12 pb-64">
                 <div className="flex justify-between items-end mb-12 pb-4 border-b border-black/5">
                   <h2 className="text-[10px] font-bold uppercase tracking-[0.3em] text-gray-400">Saved for Later</h2>
                   <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">{articles.length} ARTICLES</span>
@@ -229,47 +242,55 @@ const Dashboard = () => {
                   formatDate={formatDate}
                 />
               </div>
-            )}
+            </div>
+          )}
 
-            {activeTab === 'feeds' && (
-              <div className="animate-in slide-in-from-right-10 duration-500">
-                <div>
-                  <AddFeedForm onAdd={async (f) => { await addFeed(f); }} isLoading={isAdding} />
-                  
-                  <div className="flex flex-col md:flex-row justify-between items-center gap-6 py-8 border-b border-black/5 mb-8">
-                    <div className="flex items-center gap-4 flex-1 w-full py-2">
-                      <Search size={16} className="text-gray-300" />
-                      <input 
-                        type="text" 
-                        placeholder="Search..." 
-                        value={searchQuery} 
-                        onChange={(e) => setSearchQuery(e.target.value)} 
-                        className="bg-transparent border-none focus:outline-none text-xs uppercase tracking-widest w-full font-bold" 
-                      />
-                    </div>
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-gray-300 whitespace-nowrap">
-                      {feeds.length} FEEDS
-                    </span>
-                  </div>
-
-                  <div className="max-h-[60vh] overflow-y-auto no-scrollbar pb-12">
-                    <FeedList 
-                      feeds={feeds.filter(f => f.title.toLowerCase().includes(searchQuery.toLowerCase()))} 
-                      onDelete={handleDeleteFeedAction}
-                      onUpdate={async (id, data) => { await updateFeed({ id, data }); }}
-                      isUpdating={isUpdating}
-                      isDeleting={isDeleting}
-                      deletingId={deletingId}
+          {activeTab === 'feeds' && (
+            <div className="flex-1 overflow-y-auto md:overflow-hidden md:flex md:flex-col animate-in slide-in-from-right-10 duration-500">
+              {/* HEADER FOR FEEDS - Scrolls on mobile, Fixed on desktop */}
+              <div className="max-w-4xl w-full mx-auto px-6 md:px-12 pt-6 md:pt-12 shrink-0 bg-white z-10">
+                <AddFeedForm onAdd={async (f) => { await addFeed(f); }} isLoading={isAdding} />
+                
+                <div className="flex flex-col md:flex-row justify-between items-center gap-6 py-8 border-b border-black/5">
+                  <div className="flex items-center gap-4 flex-1 w-full py-2">
+                    <Search size={16} className="text-gray-300" />
+                    <input 
+                      type="text" 
+                      placeholder="Search..." 
+                      value={searchQuery} 
+                      onChange={(e) => setSearchQuery(e.target.value)} 
+                      className="bg-transparent border-none focus:outline-none text-xs uppercase tracking-widest w-full font-bold" 
                     />
                   </div>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-gray-300 whitespace-nowrap">
+                    {feeds.length} FEEDS
+                  </span>
                 </div>
               </div>
-            )}
 
-            {activeTab === 'settings' && (
-              <SettingsView user={user} onLogout={logout} />
-            )}
-          </div>
+              {/* LIST FOR FEEDS - Part of main scroll on mobile, own scroll on desktop */}
+              <div className="flex-1 md:overflow-y-auto no-scrollbar">
+                <div className="max-w-4xl mx-auto px-6 md:px-12 pb-64 pt-8">
+                  <FeedList 
+                    feeds={feeds.filter(f => f.title.toLowerCase().includes(searchQuery.toLowerCase()))} 
+                    onDelete={handleDeleteFeedAction}
+                    onUpdate={async (id, data) => { await updateFeed({ id, data }); }}
+                    isUpdating={isUpdating}
+                    isDeleting={isDeleting}
+                    deletingId={deletingId}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'settings' && (
+            <div className="flex-1 overflow-y-auto no-scrollbar">
+              <div className="max-w-4xl mx-auto p-6 md:p-12 pb-64">
+                <SettingsView user={user} onLogout={logout} />
+              </div>
+            </div>
+          )}
         </main>
       </div>
 

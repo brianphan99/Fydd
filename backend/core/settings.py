@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-n%eyu)%jpozg=8#%!@mwshi*#armqu=u9(mgbx7i@l@l-$1pkd
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -80,15 +80,14 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
+import os
+import dj_database_url
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'fydd',
-        'USER': 'postgres',
-        'PASSWORD': 'password',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
+    'default': dj_database_url.config(
+        default='postgres://postgres:password@localhost:5432/fydd',
+        conn_max_age=600,
+    )
 }
 
 REST_FRAMEWORK = {

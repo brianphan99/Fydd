@@ -14,7 +14,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenSidebar, activeTab, selectedFeedT
       case 'feeds': return 'LIBRARY';
       case 'saved': return 'SAVED';
       case 'settings': return 'CONFIG';
-      default: return 'PR FYDD';
+      default: return 'FYDD';
     }
   };
 
@@ -22,7 +22,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenSidebar, activeTab, selectedFeedT
     <nav className="border-b border-black p-6 flex justify-between items-center bg-white z-40 shrink-0">
       <div className="flex items-center gap-4">
         <button onClick={onOpenSidebar} className="lg:hidden p-1 cursor-pointer"><Menu size={20} /></button>
-        <h1 className="text-3xl font-bold tracking-tighter uppercase">PR FYDD</h1>
+        <h1 className="text-3xl font-bold tracking-tighter uppercase">FYDD</h1>
       </div>
       <span className="hidden md:block text-[10px] font-bold uppercase tracking-widest text-gray-300">
         {getTabLabel()}

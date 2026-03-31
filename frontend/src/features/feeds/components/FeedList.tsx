@@ -37,10 +37,18 @@ const FeedList: React.FC<FeedListProps> = ({
       {feeds.map((feed) => (
         <div 
           key={feed.id} 
-          className={`group border-2 transition-all p-6 flex flex-col md:flex-row justify-between items-center gap-6 ${editingFeedId === feed.id ? 'border-black bg-gray-50' : 'border-gray-50 hover:border-black'}`}
+          className={`group border-2 transition-all p-6 flex flex-col md:flex-row justify-between items-center gap-6 ${
+            editingFeedId === feed.id 
+              ? 'border-black bg-gray-50' 
+              : 'border-black/10 hover:border-black hover:bg-gray-50/50'
+          }`}
         >
           <div className="flex items-center gap-6 flex-1 w-full">
-            <div className={`w-10 h-10 border flex items-center justify-center transition-all ${editingFeedId === feed.id ? 'bg-black text-white' : 'border-black group-hover:bg-black group-hover:text-white'}`}>
+            <div className={`w-10 h-10 border flex items-center justify-center transition-all ${
+              editingFeedId === feed.id 
+                ? 'bg-black text-white' 
+                : 'border-black group-hover:bg-black group-hover:text-white'
+            }`}>
               {(isDeleting && deletingId === feed.id) ? (
                 <Loader2 size={16} className="animate-spin" />
               ) : (
@@ -74,14 +82,14 @@ const FeedList: React.FC<FeedListProps> = ({
               <>
                 <button 
                   onClick={() => handleSaveEdit(feed.id)} 
-                  className="p-3 text-green-600 cursor-pointer disabled:opacity-30"
+                  className="p-3 text-green-600 hover:bg-green-50 rounded-lg transition-colors cursor-pointer disabled:opacity-30"
                   disabled={isUpdating}
                 >
                   {isUpdating ? <Loader2 size={20} className="animate-spin" /> : <Check size={20} />}
                 </button>
                 <button 
                   onClick={() => setEditingFeedId(null)} 
-                  className="p-3 text-red-600 cursor-pointer disabled:opacity-30"
+                  className="p-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer disabled:opacity-30"
                   disabled={isUpdating}
                 >
                   <X size={20} />
@@ -91,14 +99,14 @@ const FeedList: React.FC<FeedListProps> = ({
               <>
                 <button 
                   onClick={() => handleStartEdit(feed)} 
-                  className="p-3 text-gray-300 hover:text-black cursor-pointer disabled:opacity-30"
+                  className="p-3 text-gray-300 hover:text-black hover:bg-gray-100 rounded-lg transition-colors cursor-pointer disabled:opacity-30"
                   disabled={isDeleting || isUpdating}
                 >
                   <Edit2 size={16} />
                 </button>
                 <button 
                   onClick={() => onDelete(feed.id)} 
-                  className="p-3 text-gray-300 hover:text-red-600 cursor-pointer disabled:opacity-30"
+                  className="p-3 text-gray-300 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer disabled:opacity-30"
                   disabled={isDeleting || isUpdating}
                 >
                   <Trash2 size={16} />

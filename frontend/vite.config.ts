@@ -14,7 +14,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
       manifest: {
-        name: 'PR FYDD',
+        name: 'FYDD',
         short_name: 'FYDD',
         description: 'Modern Minimalist Feed Reader',
         theme_color: '#ffffff',

@@ -27,7 +27,7 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({
         >
           <ArrowLeft size={16} /> Back
         </button>
-        <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">PR FYDD • READ</div>
+        <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">FYDD • READ</div>
         <button 
           onClick={(e) => onToggleSave(article, e)}
           className={`p-2 transition-all ${isSaved ? 'text-black' : 'text-gray-300 hover:text-black'} cursor-pointer`}
