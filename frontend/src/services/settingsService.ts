@@ -2,6 +2,7 @@ import api from '../api';
 
 export interface UserSettings {
   mark_as_read_on_scroll: boolean;
+  dark_mode: boolean;
 }
 
 export const settingsService = {

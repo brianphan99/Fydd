@@ -54,34 +54,40 @@ const FeedSidebar: React.FC<FeedSidebarProps> = ({
         <button 
           onClick={() => { onSelectFeed(null); onCloseSidebar(); }}
           onContextMenu={(e) => onContextMenu(e, null)}
-          className={`w-full text-left p-3 transition-all flex justify-between items-center cursor-pointer ${!selectedFeed ? 'bg-black text-white' : 'hover:bg-gray-50 text-gray-500'}`}
+          className={`w-full text-left p-3 transition-all flex justify-between items-center cursor-pointer group ${!selectedFeed ? 'bg-black text-white font-black' : 'hover:bg-gray-200 text-gray-500 hover:text-black'}`}
         >
           <div className="flex flex-col">
-            <span className="text-[10px] font-bold uppercase tracking-widest">All Feeds</span>
+            <span className="text-[10px] uppercase tracking-widest">All Feeds</span>
             {markingReadId === 'all' && (
-              <span className="text-[8px] font-black flex items-center gap-1 animate-pulse opacity-20">
+              <span className="text-[8px] font-black flex items-center gap-1 animate-pulse opacity-20 group-hover:opacity-40">
                 <Loader2 size={8} className="animate-spin" /> LOADING...
               </span>
             )}
           </div>
           <LayoutGrid size={14} />
         </button>
-        <div className="pt-4 pb-2 text-[8px] font-bold text-gray-300 uppercase tracking-[0.3em] px-3">Your Feeds</div>
+        <div className="pt-4 pb-2 text-[8px] font-bold text-gray-400 uppercase tracking-[0.3em] px-3">Your Feeds</div>
         {filteredFeeds.map(feed => (
           <button 
             key={feed.id}
             onClick={() => { onSelectFeed(feed); onCloseSidebar(); }}
             onContextMenu={(e) => onContextMenu(e, feed.id)}
-            className={`w-full text-left p-3 transition-all flex justify-between items-center cursor-pointer ${selectedFeed?.id === feed.id ? 'bg-black text-white font-bold' : 'hover:bg-gray-50 text-gray-500 font-bold'}`}
+            className={`w-full text-left p-3 transition-all flex justify-between items-center cursor-pointer group ${selectedFeed?.id === feed.id ? 'bg-black text-white font-black' : 'hover:bg-gray-200 text-gray-500 hover:text-black font-bold'}`}
           >
             <div className="flex flex-col truncate mr-2">
               <span className="text-[10px] uppercase tracking-widest truncate">{feed.title}</span>
               {markingReadId === feed.id ? (
-                <span className={`text-[8px] font-black flex items-center gap-1 animate-pulse ${selectedFeed?.id === feed.id ? 'text-white/20' : 'text-black/20'}`}>
+                <span className={`text-[8px] font-black flex items-center gap-1 animate-pulse ${selectedFeed?.id === feed.id ? 'text-white/20' : 'text-black/20 group-hover:text-black/30'}`}>
                   <Loader2 size={8} className="animate-spin" /> LOADING...
                 </span>
               ) : (feed as any).unread_count > 0 && (
-                <span className={`text-[8px] font-black ${selectedFeed?.id === feed.id ? 'text-white/50' : 'text-black/30'}`}>{(feed as any).unread_count} UNREAD</span>
+                <span className={`text-[8px] font-black transition-colors ${
+                  selectedFeed?.id === feed.id 
+                    ? 'text-white/50' 
+                    : 'group-hover:text-black/70 text-black/40'
+                }`}>
+                  {(feed as any).unread_count} UNREAD
+                </span>
               )}
             </div>
             <Rss size={12} className="shrink-0 opacity-50" />

@@ -4,7 +4,7 @@ from .models import Feed, SavedArticle, ReadArticle, UserSettings
 class UserSettingsSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserSettings
-        fields = ['mark_as_read_on_scroll']
+        fields = ['mark_as_read_on_scroll', 'dark_mode']
 
 class FeedSerializer(serializers.ModelSerializer):
     unread_count = serializers.IntegerField(read_only=True, default=0)
