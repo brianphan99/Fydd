@@ -15,6 +15,13 @@ class FeedSerializer(serializers.ModelSerializer):
         fields = ['id', 'user', 'title', 'url', 'created_at', 'unread_count']
         read_only_fields = ['user', 'created_at']
 
+    def validate(self, data):
+        user = self.context['request'].user
+        url = data.get('url')
+        if self.instance is None and Feed.objects.filter(user=user, url=url).exists():
+            raise serializers.ValidationError({"url": "You are already following this feed."})
+        return data
+
     def create(self, validated_data):
         validated_data['user'] = self.context['request'].user
         

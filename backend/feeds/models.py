@@ -8,6 +8,9 @@ class Feed(models.Model):
     content = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        unique_together = ('user', 'url')
+
     def __str__(self):
         return self.title
 

@@ -46,6 +46,14 @@ export const useFeeds = () => {
     },
   });
 
+  const discoverFeedsMutation = useMutation({
+    mutationFn: (url: string) => feedService.discoverFeeds(url),
+    onError: (error: any) => {
+      const message = error.response?.data?.error || 'Failed to discover feeds';
+      toast.error(message);
+    },
+  });
+
   return {
     feeds: feedsQuery.data || [],
     isLoading: feedsQuery.isLoading,
@@ -57,5 +65,7 @@ export const useFeeds = () => {
     isDeleting: deleteFeedMutation.isPending,
     updateFeed: updateFeedMutation.mutateAsync,
     isUpdating: updateFeedMutation.isPending,
+    discoverFeeds: discoverFeedsMutation.mutateAsync,
+    isDiscovering: discoverFeedsMutation.isPending,
   };
 };

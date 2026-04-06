@@ -8,11 +8,13 @@ from .views import (
     SavedArticleDeleteView,
     MarkArticleReadView,
     MarkFeedReadView,
-    UserSettingsView
+    UserSettingsView,
+    FeedDiscoveryView
 )
 
 urlpatterns = [
     path('', FeedListCreateView.as_view(), name='feed-list'),
+    path('discover/', FeedDiscoveryView.as_view(), name='feed-discovery'),
     path('all-content/', AggregatedFeedContentView.as_view(), name='aggregated-content'),
     path('<int:pk>/', FeedDetailView.as_view(), name='feed-detail'),
     path('<int:pk>/content/', FeedContentView.as_view(), name='feed-content'),

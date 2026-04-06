@@ -1,9 +1,21 @@
 import api from '../api';
 import { Feed } from '../types';
 
+export interface DiscoveredFeed {
+  id?: number;
+  title: string;
+  url: string;
+  is_followed: boolean;
+}
+
 export const feedService = {
   getFeeds: async (): Promise<Feed[]> => {
     const response = await api.get<Feed[]>('feeds/');
+    return response.data;
+  },
+
+  discoverFeeds: async (url: string): Promise<DiscoveredFeed[]> => {
+    const response = await api.post<DiscoveredFeed[]>('feeds/discover/', { url });
     return response.data;
   },
 

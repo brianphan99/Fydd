@@ -17,3 +17,4 @@ sgmllib3k==1.0.0
 sqlparse==0.5.5
 urllib3==2.6.3
 python-dotenv==1.2.2
+beautifulsoup4==4.13.3

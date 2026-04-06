@@ -311,7 +311,7 @@ const Dashboard = () => {
             <div className="flex-1 overflow-y-auto md:overflow-hidden md:flex md:flex-col animate-in slide-in-from-right-10 duration-500">
               {/* HEADER FOR FEEDS - Scrolls on mobile, Fixed on desktop */}
               <div className="max-w-4xl w-full mx-auto px-6 md:px-12 pt-6 md:pt-12 shrink-0 bg-white z-10">
-                <AddFeedForm onAdd={async (f) => { await addFeed(f); }} isLoading={isAdding} />
+                <AddFeedForm />
                 
                 <div className="flex flex-col md:flex-row justify-between items-center gap-6 py-8 border-b border-black/5">
                   <div className="flex items-center gap-4 flex-1 w-full py-2">
