@@ -4,10 +4,18 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
-from .models import Feed, SavedArticle, ReadArticle
-from .serializers import FeedSerializer, SavedArticleSerializer, ReadArticleSerializer
+from .models import Feed, SavedArticle, ReadArticle, UserSettings
+from .serializers import FeedSerializer, SavedArticleSerializer, ReadArticleSerializer, UserSettingsSerializer
 
-class MarkArticleReadView(generics.CreateAPIView):
+class UserSettingsView(generics.RetrieveUpdateAPIView):
+    serializer_class = UserSettingsSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self):
+        settings, created = UserSettings.objects.get_or_create(user=self.request.user)
+        return settings
+
+class MarkArticleReadView(generics.CreateAPIView, generics.DestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
@@ -22,6 +30,14 @@ class MarkArticleReadView(generics.CreateAPIView):
             
         ReadArticle.objects.get_or_create(user=request.user, link=link, defaults={'feed': feed})
         return Response(status=status.HTTP_200_OK)
+
+    def delete(self, request, *args, **kwargs):
+        link = request.query_params.get('link')
+        if not link:
+            return Response({'error': 'Link required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        ReadArticle.objects.filter(user=request.user, link=link).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 class MarkFeedReadView(generics.CreateAPIView):
     permission_classes = [permissions.IsAuthenticated]

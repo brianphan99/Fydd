@@ -42,6 +42,10 @@ export const articleService = {
     await api.post('feeds/mark-read/', { link, feed_id: feedId });
   },
 
+  markAsUnread: async (link: string): Promise<void> => {
+    await api.delete(`feeds/mark-read/?link=${encodeURIComponent(link)}`);
+  },
+
   markFeedAsRead: async (feedId: number | null): Promise<void> => {
     await api.post('feeds/mark-feed-read/', { feed_id: feedId });
   }

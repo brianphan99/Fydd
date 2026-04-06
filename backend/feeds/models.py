@@ -39,3 +39,10 @@ class ReadArticle(models.Model):
 
     def __str__(self):
         return f"{self.user.username} read {self.link}"
+
+class UserSettings(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='settings')
+    mark_as_read_on_scroll = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Settings for {self.user.username}"

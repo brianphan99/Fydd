@@ -1,5 +1,5 @@
-import React, { useState, useContext } from 'react';
-import { Eye, EyeOff, Search } from 'lucide-react';
+import React, { useState, useContext, useEffect } from 'react';
+import { Eye, EyeOff, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { AuthContext } from '../AuthContext';
 import { useFeeds } from '../hooks/useFeeds';
 import { useArticles } from '../hooks/useArticles';
@@ -16,6 +16,9 @@ import AddFeedForm from '../features/feeds/components/AddFeedForm';
 import FeedList from '../features/feeds/components/FeedList';
 import SettingsView from '../features/settings/components/SettingsView';
 
+import { useQuery } from '@tanstack/react-query';
+import { settingsService } from '../services/settingsService';
+
 const Dashboard = () => {
   const { confirm } = useConfirmation();
   const [activeTab, setActiveTab] = useState('articles');
@@ -27,27 +30,40 @@ const Dashboard = () => {
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; feedId: number | null } | null>(null);
   const [markingReadId, setMarkingReadId] = useState<number | 'all' | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [currentPage, setCurrentPage] = useState(0);
+  const ITEMS_PER_PAGE = 10;
 
   const { user, logout } = useContext(AuthContext);
   const { feeds, addFeed, deleteFeed, updateFeed, isAdding, isUpdating, isDeleting } = useFeeds();
   
+  const { data: settings } = useQuery({
+    queryKey: ['settings'],
+    queryFn: () => settingsService.getSettings()
+  });
+
   const articleParams = {
     feed_id: selectedFeed?.id,
     unread_only: unreadOnly,
+    offset: currentPage * ITEMS_PER_PAGE,
     type: activeTab === 'saved' ? 'saved' : 'all' as any,
   };
 
   const { 
     articles, 
     isLoading: articlesLoading, 
-    isFetchingNextPage,
     hasMore, 
-    fetchNextPage,
     saveArticle, 
     unsaveArticle, 
     markRead,
-    markFeedRead
+    markUnread,
+    markFeedRead,
+    refresh
   } = useArticles(articleParams);
+
+  // Reset page when feed or unread filter changes
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [selectedFeed?.id, unreadOnly, activeTab]);
 
   const formatDate = (dateStr: string) => {
     if (!dateStr) return 'RECENT';
@@ -81,6 +97,18 @@ const Dashboard = () => {
         published: article.published_at || (article as any).published,
         timestamp: (article as any).timestamp || 0
       });
+    }
+  };
+
+  const handleToggleRead = async (article: Article, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const link = (article as any).link || article.url;
+    const feedId = (article as any).feed_id || article.feed;
+    
+    if (article.is_read) {
+      await markUnread(link);
+    } else {
+      await markRead({ link, feedId });
     }
   };
 
@@ -119,15 +147,11 @@ const Dashboard = () => {
   };
 
   const handleSelectFeedAction = (feed: Feed | null) => {
+    if (selectedFeed?.id === feed?.id) {
+      refresh();
+    }
     setSelectedFeed(feed);
     setSelectedArticle(null);
-  };
-
-  const handleScroll = (e: React.UIEvent<HTMLElement>) => {
-    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
-    if (scrollHeight - scrollTop <= clientHeight + 100 && !isFetchingNextPage && hasMore && !articlesLoading) {
-      fetchNextPage();
-    }
   };
 
   const handleDeleteFeedAction = async (id: number) => {
@@ -162,6 +186,36 @@ const Dashboard = () => {
     );
   }
 
+  const PaginationControls = () => (
+    <div className="flex items-center justify-between py-12 border-t border-black/5 mt-8">
+      <button
+        onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
+        disabled={currentPage === 0 || articlesLoading}
+        className={`flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest px-4 py-2 border transition-all ${
+          currentPage === 0 || articlesLoading 
+            ? 'text-gray-200 border-gray-100 cursor-not-allowed' 
+            : 'text-black border-black hover:bg-black hover:text-white cursor-pointer'
+        }`}
+      >
+        <ChevronLeft size={14} /> Previous
+      </button>
+      <span className="text-[10px] font-black uppercase tracking-[0.3em]">
+        Page {currentPage + 1}
+      </span>
+      <button
+        onClick={() => setCurrentPage(prev => prev + 1)}
+        disabled={!hasMore || articlesLoading}
+        className={`flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest px-4 py-2 border transition-all ${
+          !hasMore || articlesLoading
+            ? 'text-gray-200 border-gray-100 cursor-not-allowed' 
+            : 'text-black border-black hover:bg-black hover:text-white cursor-pointer'
+        }`}
+      >
+        Next <ChevronRight size={14} />
+      </button>
+    </div>
+  );
+
   return (
     <div className="h-screen bg-white text-black font-sans flex flex-col overflow-hidden" onClick={() => setContextMenu(null)}>
       <Header 
@@ -187,39 +241,46 @@ const Dashboard = () => {
 
         <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
           {activeTab === 'articles' && (
-            <div 
-              onScroll={handleScroll}
-              className="flex-1 overflow-y-auto no-scrollbar"
-            >
+            <div className="flex-1 overflow-y-auto no-scrollbar">
               <div className="max-w-4xl mx-auto p-6 md:p-12 pb-64">
                 <div className="flex justify-between items-end mb-12 pb-4 border-b border-black/5">
                   <div className="flex flex-col gap-2">
                     <h2 className="text-[10px] font-bold uppercase tracking-[0.3em] text-gray-400">
                       {selectedFeed ? 'SOURCE: ' + selectedFeed.title : 'ALL FEEDS STREAM'}
                     </h2>
-                    <button 
-                      onClick={() => setUnreadOnly(!unreadOnly)}
-                      className={`flex items-center gap-2 text-[8px] font-black uppercase tracking-widest px-2 py-1 border transition-all ${unreadOnly ? 'bg-black text-white border-black' : 'text-gray-300 border-gray-100 hover:border-gray-300'}`}
-                    >
-                      {unreadOnly ? <EyeOff size={10} /> : <Eye size={10} />}
-                      {unreadOnly ? 'Unread Only' : 'Showing All'}
-                    </button>
+                    <div className="flex items-center border-2 border-black p-1 w-fit bg-white">
+                      <button 
+                        onClick={() => setUnreadOnly(true)}
+                        className={`px-8 py-3 min-w-[100px] text-[10px] font-black uppercase tracking-widest transition-all ${unreadOnly ? 'bg-black text-white' : 'text-gray-300 hover:bg-gray-50 cursor-pointer'}`}
+                      >
+                        Unread
+                      </button>
+                      <button 
+                        onClick={() => setUnreadOnly(false)}
+                        className={`px-8 py-3 min-w-[100px] text-[10px] font-black uppercase tracking-widest transition-all ${!unreadOnly ? 'bg-black text-white' : 'text-gray-300 hover:bg-gray-50 cursor-pointer'}`}
+                      >
+                        All
+                      </button>
+                    </div>
                   </div>
                   <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">
-                    {articles.length} LOADED
+                    PAGE {currentPage + 1}
                   </span>
                 </div>
 
                 <ArticleList 
                   articles={articles}
                   isLoading={articlesLoading}
-                  isLoadingMore={isFetchingNextPage}
+                  isLoadingMore={false}
                   hasMore={hasMore}
                   onSelect={handleSelectArticle}
                   onToggleSave={handleToggleSave}
+                  onToggleRead={handleToggleRead}
                   isSaved={(a) => !!a.is_saved}
                   formatDate={formatDate}
                 />
+                
+                {articles.length > 0 && <PaginationControls />}
               </div>
             </div>
           )}
@@ -238,6 +299,7 @@ const Dashboard = () => {
                   hasMore={false}
                   onSelect={handleSelectArticle}
                   onToggleSave={handleToggleSave}
+                  onToggleRead={handleToggleRead}
                   isSaved={() => true}
                   formatDate={formatDate}
                 />

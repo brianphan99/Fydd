@@ -10,6 +10,7 @@ interface ArticleListProps {
   hasMore: boolean;
   onSelect: (article: Article) => void;
   onToggleSave: (article: Article, e: React.MouseEvent) => void;
+  onToggleRead: (article: Article, e: React.MouseEvent) => void;
   isSaved: (article: Article) => boolean;
   formatDate: (dateStr: string) => string;
 }
@@ -21,6 +22,7 @@ const ArticleList: React.FC<ArticleListProps> = ({
   hasMore,
   onSelect,
   onToggleSave,
+  onToggleRead,
   isSaved,
   formatDate,
 }) => {
@@ -50,6 +52,7 @@ const ArticleList: React.FC<ArticleListProps> = ({
           isSaved={isSaved(article)}
           onSelect={onSelect}
           onToggleSave={onToggleSave}
+          onToggleRead={onToggleRead}
           formatDate={formatDate}
         />
       ))}

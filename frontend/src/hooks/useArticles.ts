@@ -17,31 +17,39 @@ interface ArticlesResponse {
 
 export const useArticles = (params: UseArticlesParams = {}) => {
   const queryClient = useQueryClient();
-  const { type = 'all', ...rest } = params;
+  const { type = 'all', offset = 0, ...rest } = params;
 
-  // For saved articles, we still use a simple query (or could be infinite if backend supports)
+  // For saved articles
   const savedQuery = useQuery<Article[]>({
     queryKey: ['articles', 'saved'],
     queryFn: () => articleService.getSavedArticles(),
     enabled: type === 'saved',
   });
 
-  const infiniteQuery = useInfiniteQuery<ArticlesResponse>({
-    queryKey: ['articles', 'infinite', rest],
-    queryFn: ({ pageParam = 0 }) => 
-      articleService.getArticles({ ...rest, offset: pageParam as number }),
-    getNextPageParam: (lastPage, allPages) => {
-      if (!lastPage.has_more) return undefined;
-      return allPages.length * 10;
-    },
-    initialPageParam: 0,
+  // Standard query for paginated articles
+  const paginatedQuery = useQuery<ArticlesResponse>({
+    queryKey: ['articles', 'paginated', { ...rest, offset }],
+    queryFn: () => articleService.getArticles({ ...rest, offset }),
     enabled: type === 'all',
   });
 
   const saveMutation = useMutation({
     mutationFn: (article: any) => articleService.saveArticle(article),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['articles'] });
+    onSuccess: (savedArticle) => {
+      queryClient.invalidateQueries({ queryKey: ['articles', 'saved'] });
+      
+      const link = savedArticle.link;
+      queryClient.setQueriesData({ queryKey: ['articles', 'paginated'] }, (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          entries: old.entries.map((entry: any) => 
+            (entry.url === link || (entry as any).link === link) 
+              ? { ...entry, is_saved: true } 
+              : entry
+          )
+        };
+      });
       toast.success('Article saved');
     },
     onError: (error: any) => {
@@ -52,8 +60,20 @@ export const useArticles = (params: UseArticlesParams = {}) => {
 
   const unsaveMutation = useMutation({
     mutationFn: (link: string) => articleService.unsaveArticle(link),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['articles'] });
+    onSuccess: (_, link) => {
+      queryClient.invalidateQueries({ queryKey: ['articles', 'saved'] });
+
+      queryClient.setQueriesData({ queryKey: ['articles', 'paginated'] }, (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          entries: old.entries.map((entry: any) => 
+            (entry.url === link || (entry as any).link === link) 
+              ? { ...entry, is_saved: false } 
+              : entry
+          )
+        };
+      });
       toast.success('Article unsaved');
     },
     onError: (error: any) => {
@@ -65,16 +85,60 @@ export const useArticles = (params: UseArticlesParams = {}) => {
   const markReadMutation = useMutation({
     mutationFn: ({ link, feedId }: { link: string; feedId: number }) => 
       articleService.markAsRead(link, feedId),
+    onMutate: async ({ link }) => {
+      queryClient.setQueriesData({ queryKey: ['articles', 'paginated'] }, (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          entries: old.entries.map((entry: any) => 
+            (entry.url === link || (entry as any).link === link) 
+              ? { ...entry, is_read: true } 
+              : entry
+          )
+        };
+      });
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['articles'] });
+      queryClient.invalidateQueries({ queryKey: ['feeds'] });
+    },
+  });
+
+  const markUnreadMutation = useMutation({
+    mutationFn: (link: string) => articleService.markAsUnread(link),
+    onMutate: async (link) => {
+      queryClient.setQueriesData({ queryKey: ['articles', 'paginated'] }, (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          entries: old.entries.map((entry: any) => 
+            (entry.url === link || (entry as any).link === link) 
+              ? { ...entry, is_read: false } 
+              : entry
+          )
+        };
+      });
+    },
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['feeds'] });
     },
   });
 
   const markFeedReadMutation = useMutation({
     mutationFn: (feedId: number | null) => articleService.markFeedAsRead(feedId),
+    onMutate: async (feedId) => {
+      queryClient.setQueriesData({ queryKey: ['articles', 'paginated'] }, (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          entries: old.entries.map((entry: any) => 
+            (feedId === null || (entry.feed || (entry as any).feed_id) === feedId)
+              ? { ...entry, is_read: true }
+              : entry
+          )
+        };
+      });
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['articles'] });
       queryClient.invalidateQueries({ queryKey: ['feeds'] });
     },
   });
@@ -83,21 +147,24 @@ export const useArticles = (params: UseArticlesParams = {}) => {
   
   const articles = isSavedType 
     ? (savedQuery.data || [])
-    : (infiniteQuery.data?.pages.flatMap(page => page.entries) || []);
+    : (paginatedQuery.data?.entries || []);
 
-  const hasMore = !isSavedType && !!infiniteQuery.hasNextPage;
+  const hasMore = !isSavedType && !!paginatedQuery.data?.has_more;
 
   return {
     articles,
-    title: (!isSavedType && infiniteQuery.data?.pages[0]?.title) || '',
+    title: (!isSavedType && paginatedQuery.data?.title) || '',
     hasMore,
-    isLoading: isSavedType ? savedQuery.isLoading : infiniteQuery.isLoading,
-    isFetchingNextPage: infiniteQuery.isFetchingNextPage,
-    isError: isSavedType ? savedQuery.isError : infiniteQuery.isError,
-    fetchNextPage: infiniteQuery.fetchNextPage,
+    isLoading: isSavedType ? savedQuery.isLoading : paginatedQuery.isLoading,
+    isError: isSavedType ? savedQuery.isError : paginatedQuery.isError,
     saveArticle: saveMutation.mutateAsync,
     unsaveArticle: unsaveMutation.mutateAsync,
     markRead: markReadMutation.mutateAsync,
+    markUnread: markUnreadMutation.mutateAsync,
     markFeedRead: markFeedReadMutation.mutateAsync,
+    refresh: () => {
+      queryClient.invalidateQueries({ queryKey: ['articles'] });
+      queryClient.invalidateQueries({ queryKey: ['feeds'] });
+    }
   };
 };

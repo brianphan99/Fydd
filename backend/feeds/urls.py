@@ -7,7 +7,8 @@ from .views import (
     SavedArticleListCreateView,
     SavedArticleDeleteView,
     MarkArticleReadView,
-    MarkFeedReadView
+    MarkFeedReadView,
+    UserSettingsView
 )
 
 urlpatterns = [
@@ -19,4 +20,5 @@ urlpatterns = [
     path('saved/delete/', SavedArticleDeleteView.as_view(), name='saved-article-delete'),
     path('mark-read/', MarkArticleReadView.as_view(), name='mark-article-read'),
     path('mark-feed-read/', MarkFeedReadView.as_view(), name='mark-feed-read'),
+    path('settings/', UserSettingsView.as_view(), name='user-settings'),
 ]
