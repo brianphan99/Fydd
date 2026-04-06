@@ -30,7 +30,7 @@ const ArticleList: React.FC<ArticleListProps> = ({
     return (
       <div className="flex flex-col items-center justify-center py-24 animate-pulse">
         <div className="w-12 h-1 bg-black mb-4"></div>
-        <p className="text-[10px] uppercase tracking-[0.3em] font-bold">Syncing...</p>
+        <p className="text-[10px] uppercase tracking-[0.3em] font-bold">Loading...</p>
       </div>
     );
   }

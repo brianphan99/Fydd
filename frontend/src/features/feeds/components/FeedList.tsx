@@ -6,6 +6,7 @@ interface FeedListProps {
   feeds: Feed[];
   onDelete: (id: number) => Promise<void>;
   onUpdate: (id: number, data: Partial<Feed>) => Promise<void>;
+  isLoading?: boolean;
   isUpdating?: boolean;
   isDeleting?: boolean;
   deletingId?: number | null;
@@ -15,12 +16,30 @@ const FeedList: React.FC<FeedListProps> = ({
   feeds, 
   onDelete, 
   onUpdate, 
+  isLoading,
   isUpdating, 
   isDeleting,
   deletingId 
 }) => {
   const [editingFeedId, setEditingFeedId] = useState<number | null>(null);
   const [editForm, setEditForm] = useState({ title: '', url: '' });
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 animate-pulse">
+        <div className="w-12 h-1 bg-black mb-4"></div>
+        <p className="text-[10px] uppercase tracking-[0.3em] font-bold">Loading...</p>
+      </div>
+    );
+  }
+
+  if (feeds.length === 0) {
+    return (
+      <div className="py-24 text-center">
+        <p className="text-sm italic text-gray-300 uppercase tracking-widest">No Feeds Found.</p>
+      </div>
+    );
+  }
 
   const handleStartEdit = (feed: Feed) => {
     setEditingFeedId(feed.id);

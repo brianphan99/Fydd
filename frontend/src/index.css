@@ -10,6 +10,12 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
-button {
+button, 
+a, 
+input[type="button"], 
+input[type="submit"], 
+input[type="checkbox"], 
+input[type="radio"],
+.cursor-pointer {
   @apply cursor-pointer;
 }

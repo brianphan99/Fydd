@@ -34,7 +34,7 @@ const Dashboard = () => {
   const ITEMS_PER_PAGE = 10;
 
   const { user, logout } = useContext(AuthContext);
-  const { feeds, addFeed, deleteFeed, updateFeed, isAdding, isUpdating, isDeleting } = useFeeds();
+  const { feeds, addFeed, deleteFeed, updateFeed, isAdding, isUpdating, isDeleting, isLoading: feedsLoading } = useFeeds();
   
   const { data: settings } = useQuery({
     queryKey: ['settings'],
@@ -337,6 +337,7 @@ const Dashboard = () => {
                     feeds={feeds.filter(f => f.title.toLowerCase().includes(searchQuery.toLowerCase()))} 
                     onDelete={handleDeleteFeedAction}
                     onUpdate={async (id, data) => { await updateFeed({ id, data }); }}
+                    isLoading={feeds.length === 0 && feedsLoading}
                     isUpdating={isUpdating}
                     isDeleting={isDeleting}
                     deletingId={deletingId}
