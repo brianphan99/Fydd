@@ -9,6 +9,23 @@ from google.oauth2 import id_token
 from google.auth.transport import requests
 from django.conf import settings
 
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.views import TokenObtainPairView
+
+class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        # Add custom claims
+        token['username'] = user.username
+        token['email'] = user.email
+        # Use first_name as a display name if available
+        token['display_name'] = user.first_name or user.username
+        return token
+
+class MyTokenObtainPairView(TokenObtainPairView):
+    serializer_class = MyTokenObtainPairSerializer
+
 def validate_password_strength(password):
     if len(password) < 8:
         return "Password must be at least 8 characters long."
@@ -42,17 +59,24 @@ class GoogleAuthView(APIView):
             email = idinfo['email']
             print(f"DEBUG: Successfully verified token for email: {email}")
             username = email.split('@')[0]
+            name = idinfo.get('name', '')
             
             # Find or create user
             user, created = User.objects.get_or_create(email=email, defaults={'username': username})
             
-            # Generate tokens
-            refresh = RefreshToken.for_user(user)
+            # Update name if it's new or empty
+            if name and not user.first_name:
+                user.first_name = name
+                user.save()
+            
+            # Generate tokens using custom serializer logic
+            refresh = MyTokenObtainPairSerializer.get_token(user)
             return Response({
                 'refresh': str(refresh),
                 'access': str(refresh.access_token),
                 'email': user.email,
-                'username': user.username
+                'username': user.username,
+                'display_name': user.first_name or user.username
             })
         except Exception as e:
             print(f"DEBUG: Error in GoogleAuthView: {str(e)}")

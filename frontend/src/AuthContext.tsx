@@ -5,6 +5,7 @@ import api from './api';
 interface User {
   user_id: number;
   username: string;
+  display_name: string;
   email: string;
   exp: number;
 }
