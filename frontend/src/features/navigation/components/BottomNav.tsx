@@ -15,12 +15,12 @@ const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onTabChange }) => {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-black flex justify-around items-center p-4 z-50 shadow-2xl">
+    <nav className="fixed bottom-0 left-0 right-0 bg-theme-primary border-t border-black/10 flex justify-around items-center p-4 z-50 shadow-xl transition-colors">
       {tabs.map(({ id, icon: Icon, label }) => (
         <button 
           key={id}
           onClick={() => onTabChange(id)} 
-          className={`flex flex-col items-center gap-1 cursor-pointer transition-all ${activeTab === id ? 'text-black scale-110' : 'text-gray-300'}`}
+          className={`flex flex-col items-center gap-1 cursor-pointer transition-all ${activeTab === id ? 'text-theme-primary scale-110' : 'text-gray-300'}`}
         >
           <Icon size={24} strokeWidth={activeTab === id ? 2.5 : 2} />
           <span className="text-[8px] font-black uppercase tracking-widest">{label}</span>

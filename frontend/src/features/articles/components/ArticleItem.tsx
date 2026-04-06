@@ -24,17 +24,17 @@ const ArticleItem: React.FC<ArticleItemProps> = ({
   return (
     <div 
       onClick={() => onSelect(article)} 
-      className={`group cursor-pointer py-10 px-6 border-b border-gray-100 hover:border-black transition-all duration-700 flex justify-between items-start gap-10 ${
+      className={`group cursor-pointer py-10 px-6 border-b border-black/5 hover:border-black/20 transition-all duration-700 flex justify-between items-start gap-10 ${
         isVisuallyRead 
-          ? 'opacity-75' 
+          ? 'opacity-60' 
           : 'opacity-100'
       }`}
     >
       <div className="flex-1">
         <div className="flex items-center gap-3 mb-4">
-          <div className={`w-2 h-2 bg-black rounded-full transition-all duration-500 ${isVisuallyRead ? 'scale-0 opacity-0' : 'scale-100 opacity-100'}`} />
+          <div className={`w-2 h-2 bg-theme-primary rounded-full border border-black transition-all duration-500 ${isVisuallyRead ? 'scale-0 opacity-0' : 'scale-100 opacity-100'}`} />
           <span className={`text-[10px] font-bold border px-2 py-0.5 uppercase tracking-widest truncate max-w-[120px] transition-colors duration-500 ${
-            isVisuallyRead ? 'text-gray-400 border-gray-200' : 'text-black border-black'
+            isVisuallyRead ? 'text-gray-400 border-black/5' : 'text-theme-primary border-black/20'
           }`}>
             {(article as any).feed_title || 'Feed'}
           </span>
@@ -43,7 +43,7 @@ const ArticleItem: React.FC<ArticleItemProps> = ({
           </span>
         </div>
         <h2 className={`text-2xl md:text-3xl font-bold uppercase tracking-tight leading-tight group-hover:translate-x-2 transition-all duration-700 ${
-          isVisuallyRead ? 'text-gray-700' : 'text-black'
+          isVisuallyRead ? 'text-theme-primary/50' : 'text-theme-primary'
         }`}>
           {article.title || 'Untitled'}
         </h2>
@@ -51,8 +51,8 @@ const ArticleItem: React.FC<ArticleItemProps> = ({
       
       <div className="flex items-center gap-6 self-center">
         {article.thumbnail && (
-          <div className={`hidden md:block w-32 h-32 shrink-0 border-2 transition-all duration-700 overflow-hidden bg-gray-50 ${
-            isVisuallyRead ? 'border-gray-100 opacity-80' : 'border-black/10 group-hover:border-black'
+          <div className={`hidden md:block w-32 h-32 shrink-0 border transition-all duration-700 overflow-hidden bg-gray-50/50 rounded-sm ${
+            isVisuallyRead ? 'border-black/5 opacity-50' : 'border-black/10 group-hover:border-black/30'
           }`}>
             <img src={article.thumbnail} alt="" className="w-full h-full object-cover" />
           </div>
@@ -62,7 +62,7 @@ const ArticleItem: React.FC<ArticleItemProps> = ({
           <button 
             onClick={(e) => onToggleRead(article, e)}
             title={article.is_read ? "Mark as unread" : "Mark as read"}
-            className={`p-2 transition-all ${isVisuallyRead ? 'text-black' : 'text-gray-200 group-hover:text-black'} cursor-pointer`}
+            className={`p-2 transition-all ${isVisuallyRead ? 'text-theme-primary' : 'text-gray-200 group-hover:text-theme-primary'} cursor-pointer`}
           >
             {isVisuallyRead ? <EyeOff size={20} /> : <Eye size={20} />}
           </button>
@@ -70,7 +70,7 @@ const ArticleItem: React.FC<ArticleItemProps> = ({
           <button 
             onClick={(e) => onToggleSave(article, e)}
             title={isSaved ? "Unsave article" : "Save article"}
-            className={`p-2 transition-all ${isSaved ? 'text-black' : 'text-gray-200 group-hover:text-black'} cursor-pointer ${isVisuallyRead ? 'opacity-60' : 'opacity-100'}`}
+            className={`p-2 transition-all ${isSaved ? 'text-theme-primary' : 'text-gray-200 group-hover:text-theme-primary'} cursor-pointer ${isVisuallyRead ? 'opacity-40' : 'opacity-100'}`}
           >
             {isSaved ? <BookmarkCheck size={20} /> : <Bookmark size={20} />}
           </button>

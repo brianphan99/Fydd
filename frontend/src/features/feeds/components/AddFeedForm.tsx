@@ -36,21 +36,21 @@ const AddFeedForm: React.FC = () => {
   };
 
   return (
-    <section className="bg-white pb-10">
+    <section className="bg-theme-primary pb-10 transition-colors">
       <h2 className="text-[10px] font-bold uppercase tracking-[0.3em] mb-8 text-gray-400">Add Feed</h2>
-      <form onSubmit={handleDiscover} className="flex flex-col md:flex-row gap-6 p-6 border-2 border-black bg-white shadow-lg mb-8">
+      <form onSubmit={handleDiscover} className="flex flex-col md:flex-row gap-6 p-6 border border-black/10 bg-theme-primary shadow-lg mb-8 rounded-sm">
         <input 
           type="url" 
           placeholder="PASTE WEBSITE OR FEED URL" 
           value={url} 
           onChange={(e) => setUrl(e.target.value)} 
-          className="flex-1 border-b border-black py-2 focus:outline-none text-xs tracking-widest" 
+          className="flex-1 border-b border-black/10 py-2 focus:outline-none text-xs tracking-widest bg-transparent" 
           required 
         />
         <button 
           type="submit" 
           disabled={isDiscovering}
-          className={`bg-black text-white px-8 py-3 font-bold uppercase text-[10px] tracking-widest hover:bg-gray-800 transition-all cursor-pointer whitespace-nowrap flex items-center gap-3 ${isDiscovering ? 'opacity-50 cursor-not-allowed' : ''}`}
+          className={`bg-black text-white px-8 py-3 font-bold uppercase text-[10px] tracking-widest hover:bg-gray-800 transition-all cursor-pointer whitespace-nowrap flex items-center gap-3 rounded-sm ${isDiscovering ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
           {isDiscovering ? (
             <>
@@ -74,7 +74,7 @@ const AddFeedForm: React.FC = () => {
           </div>
           <div className="grid gap-4">
             {discoveredFeeds.map((feed) => (
-              <div key={feed.url} className="flex items-center justify-between p-6 border-2 border-black/5 hover:border-black transition-all group bg-gray-50/30">
+              <div key={feed.url} className="flex items-center justify-between p-6 border border-black/5 hover:border-black/20 transition-all group bg-gray-50/30 rounded-sm">
                 <div className="flex flex-col gap-1 overflow-hidden mr-4">
                   <span className="font-black text-xs uppercase tracking-tighter truncate">{feed.title}</span>
                   <span className="text-[10px] text-gray-400 truncate font-mono">{feed.url}</span>
@@ -84,7 +84,7 @@ const AddFeedForm: React.FC = () => {
                   <button 
                     onClick={() => handleUnfollow(feed)}
                     disabled={isDeleting}
-                    className="flex items-center gap-2 px-6 py-2 bg-gray-200 text-gray-600 text-[10px] font-black uppercase tracking-widest hover:bg-gray-300 transition-all border border-transparent"
+                    className="flex items-center gap-2 px-6 py-2 bg-gray-200 text-gray-600 text-[10px] font-black uppercase tracking-widest hover:bg-gray-300 transition-all border border-transparent rounded-sm"
                   >
                     Unfollow
                   </button>
@@ -92,7 +92,7 @@ const AddFeedForm: React.FC = () => {
                   <button 
                     onClick={() => handleFollow(feed)}
                     disabled={isAdding}
-                    className="flex items-center gap-2 px-6 py-2 bg-black text-white text-[10px] font-black uppercase tracking-widest hover:bg-gray-800 transition-all border border-black"
+                    className="flex items-center gap-2 px-6 py-2 bg-black text-white text-[10px] font-black uppercase tracking-widest hover:bg-gray-800 transition-all border border-black rounded-sm"
                   >
                     Follow
                   </button>

@@ -31,21 +31,21 @@ const FeedSidebar: React.FC<FeedSidebarProps> = ({
   );
 
   return (
-    <div className={`fixed lg:static inset-0 z-40 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 transition-transform duration-300 bg-white border-r border-black/5 flex flex-col w-64 h-full shrink-0`}>
-      <div className="p-6 border-b border-black/5 flex justify-between items-center lg:hidden">
+    <div className={`fixed lg:static inset-0 z-40 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 transition-transform duration-300 bg-theme-primary border-r border-black/10 flex flex-col w-64 h-full shrink-0`}>
+      <div className="p-6 border-b border-black/10 flex justify-between items-center lg:hidden">
         <h2 className="text-sm font-bold tracking-widest uppercase">Sources</h2>
         <button onClick={onCloseSidebar} className="p-2 cursor-pointer"><X size={18} /></button>
       </div>
       
-      <div className="p-4">
-        <div className="flex items-center gap-2 bg-gray-50 p-2 border border-black/5">
-          <Search size={12} className="text-gray-400" />
+      <div className="p-4 pb-2">
+        <div className="flex items-center gap-3 px-1 py-2 border-b border-black/10 group/search transition-all">
+          <Search size={12} className="text-gray-400 group-focus-within/search:text-theme-primary transition-colors" />
           <input 
             type="text" 
-            placeholder="Search..."
+            placeholder="SEARCH..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="bg-transparent border-none focus:outline-none text-[10px] uppercase tracking-widest w-full font-bold"
+            className="bg-transparent border-none focus:outline-none text-[10px] uppercase tracking-[0.2em] w-full font-bold placeholder:text-gray-300 text-theme-primary"
           />
         </div>
       </div>
@@ -54,7 +54,7 @@ const FeedSidebar: React.FC<FeedSidebarProps> = ({
         <button 
           onClick={() => { onSelectFeed(null); onCloseSidebar(); }}
           onContextMenu={(e) => onContextMenu(e, null)}
-          className={`w-full text-left p-3 transition-all flex justify-between items-center cursor-pointer group ${!selectedFeed ? 'bg-black text-white font-black' : 'hover:bg-gray-200 text-gray-500 hover:text-black'}`}
+          className={`w-full text-left p-3 transition-all flex justify-between items-center cursor-pointer group rounded-sm ${!selectedFeed ? 'bg-black text-white font-black' : 'hover:bg-gray-200 text-gray-500 hover:text-black'}`}
         >
           <div className="flex flex-col">
             <span className="text-[10px] uppercase tracking-widest">All Feeds</span>
@@ -72,7 +72,7 @@ const FeedSidebar: React.FC<FeedSidebarProps> = ({
             key={feed.id}
             onClick={() => { onSelectFeed(feed); onCloseSidebar(); }}
             onContextMenu={(e) => onContextMenu(e, feed.id)}
-            className={`w-full text-left p-3 transition-all flex justify-between items-center cursor-pointer group ${selectedFeed?.id === feed.id ? 'bg-black text-white font-black' : 'hover:bg-gray-200 text-gray-500 hover:text-black font-bold'}`}
+            className={`w-full text-left p-3 transition-all flex justify-between items-center cursor-pointer group rounded-sm ${selectedFeed?.id === feed.id ? 'bg-black text-white font-black' : 'hover:bg-gray-200 text-gray-500 hover:text-black font-bold'}`}
           >
             <div className="flex flex-col truncate mr-2">
               <span className="text-[10px] uppercase tracking-widest truncate">{feed.title}</span>

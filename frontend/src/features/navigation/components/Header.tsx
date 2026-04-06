@@ -19,7 +19,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenSidebar, activeTab, selectedFeedT
   };
 
   return (
-    <nav className="border-b border-black p-6 flex justify-between items-center bg-white z-40 shrink-0">
+    <nav className="border-b border-black/10 p-6 flex justify-between items-center bg-theme-primary z-40 shrink-0 transition-colors">
       <div className="flex items-center gap-4">
         <button onClick={onOpenSidebar} className="lg:hidden p-1 cursor-pointer"><Menu size={20} /></button>
         <h1 className="text-3xl font-bold tracking-tighter uppercase">FYDD</h1>

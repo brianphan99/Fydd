@@ -248,16 +248,16 @@ const Dashboard = () => {
                     <h2 className="text-[10px] font-bold uppercase tracking-[0.3em] text-gray-400">
                       {selectedFeed ? 'SOURCE: ' + selectedFeed.title : 'ALL FEEDS STREAM'}
                     </h2>
-                    <div className="flex items-center border-2 border-black p-1 w-fit bg-white">
+                    <div className="flex items-center border border-black/10 p-1 w-fit bg-theme-primary rounded-sm overflow-hidden">
                       <button 
                         onClick={() => setUnreadOnly(true)}
-                        className={`px-8 py-3 min-w-[100px] text-[10px] font-black uppercase tracking-widest transition-all ${unreadOnly ? 'bg-black text-white' : 'text-gray-300 hover:bg-gray-50 cursor-pointer'}`}
+                        className={`px-8 py-3 min-w-[100px] text-[10px] font-black uppercase tracking-widest transition-all rounded-sm ${unreadOnly ? 'bg-black text-white' : 'text-gray-300 hover:bg-gray-50 cursor-pointer'}`}
                       >
                         Unread
                       </button>
                       <button 
                         onClick={() => setUnreadOnly(false)}
-                        className={`px-8 py-3 min-w-[100px] text-[10px] font-black uppercase tracking-widest transition-all ${!unreadOnly ? 'bg-black text-white' : 'text-gray-300 hover:bg-gray-50 cursor-pointer'}`}
+                        className={`px-8 py-3 min-w-[100px] text-[10px] font-black uppercase tracking-widest transition-all rounded-sm ${!unreadOnly ? 'bg-black text-white' : 'text-gray-300 hover:bg-gray-50 cursor-pointer'}`}
                       >
                         All
                       </button>

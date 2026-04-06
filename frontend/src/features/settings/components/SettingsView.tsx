@@ -52,7 +52,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ user, onLogout }) => {
   return (
     <div className="max-w-md animate-in slide-in-from-right-10 duration-500 space-y-12 pb-64">
       <header className="mb-16">
-        <h1 className="text-5xl font-black uppercase tracking-tighter border-b-8 border-black pb-2 inline-block">
+        <h1 className="text-5xl font-black uppercase tracking-tighter border-b-4 border-black pb-2 inline-block">
           {user?.display_name || user?.username || 'Profile'}
         </h1>
       </header>

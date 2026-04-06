@@ -56,17 +56,17 @@ const FeedList: React.FC<FeedListProps> = ({
       {feeds.map((feed) => (
         <div 
           key={feed.id} 
-          className={`group border-2 transition-all p-6 flex flex-col md:flex-row justify-between items-center gap-6 ${
+          className={`group border transition-all p-6 flex flex-col md:flex-row justify-between items-center gap-6 rounded-sm ${
             editingFeedId === feed.id 
-              ? 'border-black bg-gray-50' 
-              : 'border-black/10 hover:border-black hover:bg-gray-50/50'
+              ? 'border-black/30 bg-gray-50' 
+              : 'border-black/10 hover:border-black/30 hover:bg-gray-50/50'
           }`}
         >
           <div className="flex items-center gap-6 flex-1 w-full">
-            <div className={`w-10 h-10 border flex items-center justify-center transition-all ${
+            <div className={`w-10 h-10 border rounded-sm flex items-center justify-center transition-all ${
               editingFeedId === feed.id 
                 ? 'bg-black text-white' 
-                : 'border-black group-hover:bg-black group-hover:text-white'
+                : 'border-black/20 group-hover:bg-black group-hover:text-white'
             }`}>
               {(isDeleting && deletingId === feed.id) ? (
                 <Loader2 size={16} className="animate-spin" />
@@ -79,13 +79,13 @@ const FeedList: React.FC<FeedListProps> = ({
                 <input 
                   value={editForm.title} 
                   onChange={e => setEditForm({...editForm, title: e.target.value})} 
-                  className="w-full border-b border-black bg-transparent py-1 text-xl font-bold uppercase tracking-tight focus:outline-none" 
+                  className="w-full border-b border-black/20 bg-transparent py-1 text-xl font-bold uppercase tracking-tight focus:outline-none focus:border-black transition-colors" 
                   disabled={isUpdating}
                 />
                 <input 
                   value={editForm.url} 
                   onChange={e => setEditForm({...editForm, url: e.target.value})} 
-                  className="w-full border-b border-black bg-transparent py-1 text-[10px] uppercase tracking-widest focus:outline-none" 
+                  className="w-full border-b border-black/20 bg-transparent py-1 text-[10px] uppercase tracking-widest focus:outline-none focus:border-black transition-colors" 
                   disabled={isUpdating}
                 />
               </div>

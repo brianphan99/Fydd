@@ -1,42 +1,54 @@
 @import "tailwindcss";
 
 @theme {
-  --color-black: #000000;
-  --color-white: #ffffff;
+  --color-black: #111111;
+  --color-white: #fdfdfd;
   
-  --color-bg-primary: #ffffff;
-  --color-bg-secondary: #f9f9f9;
-  --color-text-primary: #000000;
+  --color-bg-primary: #fdfdfd;
+  --color-bg-secondary: #f7f7f7;
+  --color-text-primary: #111111;
   --color-text-secondary: #666666;
-  --color-border-primary: #000000;
-  --color-border-secondary: rgba(0, 0, 0, 0.05);
+  --color-border-primary: #111111;
+  --color-border-secondary: rgba(0, 0, 0, 0.04);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-bg-primary: #ffffff;
-    --color-bg-secondary: #f9f9f9;
-    --color-text-primary: #000000;
+    --color-bg-primary: #fdfdfd;
+    --color-bg-secondary: #f7f7f7;
+    --color-text-primary: #111111;
     --color-text-secondary: #666666;
-    --color-border-primary: #000000;
-    --color-border-secondary: rgba(0, 0, 0, 0.05);
+    --color-border-primary: #111111;
+    --color-border-secondary: rgba(0, 0, 0, 0.04);
   }
 }
 
 body.dark {
   --color-bg-primary: #121212;
-  --color-bg-secondary: #1e1e1e;
-  --color-text-primary: #ffffff;
-  --color-text-secondary: #a0a0a0;
-  --color-border-primary: #ffffff;
-  --color-border-secondary: rgba(255, 255, 255, 0.1);
+  --color-bg-secondary: #1a1a1a;
+  --color-text-primary: #eeeeee;
+  --color-text-secondary: #999999;
+  --color-border-primary: #eeeeee;
+  --color-border-secondary: rgba(255, 255, 255, 0.08);
 }
 
 body {
   background-color: var(--color-bg-primary);
   color: var(--color-text-primary);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+
+/* Global Softening */
+button, 
+input, 
+textarea, 
+select,
+.border-2,
+.border-4,
+.border,
+.bg-black {
+  border-radius: 2px;
 }
 
 /* Custom Utilities for Dark Mode Support */
@@ -49,28 +61,28 @@ body {
 
 /* Force inverse for core elements in dark mode if needed */
 body.dark {
-  .bg-black { background-color: #ffffff !important; color: #000000 !important; }
-  .text-black { color: #ffffff !important; }
-  .bg-white { background-color: #121212 !important; color: #ffffff !important; }
-  .text-white { color: #ffffff !important; }
-  .border-black { border-color: #ffffff !important; }
-  .border-black\/5 { border-color: rgba(255, 255, 255, 0.1) !important; }
-  .border-black\/10 { border-color: rgba(255, 255, 255, 0.15) !important; }
-  .text-gray-400 { color: #888888 !important; }
-  .text-gray-300 { color: #777777 !important; }
+  .bg-black { background-color: #eeeeee !important; color: #111111 !important; }
+  .text-black { color: #eeeeee !important; }
+  .bg-white { background-color: #121212 !important; color: #eeeeee !important; }
+  .text-white { color: #eeeeee !important; }
+  .border-black { border-color: #eeeeee !important; }
+  .border-black\/5 { border-color: rgba(255, 255, 255, 0.08) !important; }
+  .border-black\/10 { border-color: rgba(255, 255, 255, 0.12) !important; }
+  .text-gray-400 { color: #777777 !important; }
+  .text-gray-300 { color: #555555 !important; }
   .bg-gray-50 { background-color: #1a1a1a !important; }
   .bg-gray-100 { background-color: #222222 !important; }
   .bg-gray-200 { background-color: #2a2a2a !important; }
-  .text-gray-600 { color: #aaaaaa !important; }
-  .text-gray-500 { color: #cccccc !important; }
-  .text-black\/80 { color: rgba(255, 255, 255, 0.85) !important; }
-  .text-black\/70 { color: rgba(255, 255, 255, 0.75) !important; }
-  .text-black\/60 { color: rgba(255, 255, 255, 0.65) !important; }
-  .text-black\/50 { color: rgba(255, 255, 255, 0.55) !important; }
-  .text-black\/40 { color: rgba(255, 255, 255, 0.45) !important; }
-  .text-black\/30 { color: rgba(255, 255, 255, 0.35) !important; }
-  .text-black\/20 { color: rgba(255, 255, 255, 0.25) !important; }
-  .text-black\/5 { color: rgba(255, 255, 255, 0.1) !important; }
+  .text-gray-600 { color: #999999 !important; }
+  .text-gray-500 { color: #aaaaaa !important; }
+  .text-black\/80 { color: rgba(238, 238, 238, 0.85) !important; }
+  .text-black\/70 { color: rgba(238, 238, 238, 0.75) !important; }
+  .text-black\/60 { color: rgba(238, 238, 238, 0.65) !important; }
+  .text-black\/50 { color: rgba(238, 238, 238, 0.55) !important; }
+  .text-black\/40 { color: rgba(238, 238, 238, 0.45) !important; }
+  .text-black\/30 { color: rgba(238, 238, 238, 0.35) !important; }
+  .text-black\/20 { color: rgba(238, 238, 238, 0.25) !important; }
+  .text-black\/5 { color: rgba(238, 238, 238, 0.08) !important; }
   
   /* Critical: In dark mode, bg-black becomes white. 
      So translucent white text inside it must become translucent black. */
@@ -78,12 +90,12 @@ body.dark {
   .bg-black .text-white\/20 { color: rgba(0, 0, 0, 0.2) !important; }
   
   /* Reset some specifics that shouldn't be fully white */
-  .bg-black.text-white { background-color: #ffffff !important; color: #000000 !important; }
+  .bg-black.text-white { background-color: #eeeeee !important; color: #111111 !important; }
   
   /* Prose dark mode */
-  .prose { color: #cccccc !important; }
-  .prose a { color: #ffffff !important; }
-  .prose strong { color: #ffffff !important; }
+  .prose { color: #aaaaaa !important; }
+  .prose a { color: #eeeeee !important; }
+  .prose strong { color: #eeeeee !important; }
 }
 
 button, 

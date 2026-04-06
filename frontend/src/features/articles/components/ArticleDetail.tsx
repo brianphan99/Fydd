@@ -19,8 +19,8 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({
   formatDate,
 }) => {
   return (
-    <div className="h-screen bg-white text-black font-sans flex flex-col">
-      <nav className="border-b border-black p-6 flex justify-between items-center bg-white z-40 shrink-0">
+    <div className="h-screen bg-theme-primary text-theme-primary font-sans flex flex-col transition-colors">
+      <nav className="border-b border-black/10 p-6 flex justify-between items-center bg-theme-primary z-40 shrink-0">
         <button 
           onClick={onClose}
           className="flex items-center gap-2 hover:text-gray-400 transition-colors uppercase text-xs font-bold tracking-widest cursor-pointer"
@@ -30,7 +30,7 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({
         <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">FYDD • READ</div>
         <button 
           onClick={(e) => onToggleSave(article, e)}
-          className={`p-2 transition-all ${isSaved ? 'text-black' : 'text-gray-300 hover:text-black'} cursor-pointer`}
+          className={`p-2 transition-all ${isSaved ? 'text-theme-primary' : 'text-gray-300 hover:text-black'} cursor-pointer`}
         >
           {isSaved ? <BookmarkCheck size={20} /> : <Bookmark size={20} />}
         </button>
@@ -45,7 +45,7 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({
           </h1>
           
           {article.thumbnail && (
-            <div className="mb-16 border-4 border-black overflow-hidden bg-gray-50 shadow-2xl">
+            <div className="mb-16 border border-black/10 rounded-sm overflow-hidden bg-gray-50/50 shadow-xl transition-all">
               <img 
                 src={article.thumbnail} 
                 alt={article.title} 
@@ -56,14 +56,14 @@ const ArticleDetail: React.FC<ArticleDetailProps> = ({
 
           <SanitizedHTML 
             html={article.summary} 
-            className="text-gray-800 text-lg leading-relaxed mb-16 prose prose-lg max-w-none prose-p:mb-6 prose-a:text-black prose-a:font-bold prose-img:mx-auto prose-img:my-12"
+            className="text-theme-primary/90 text-lg leading-relaxed mb-16 prose prose-lg max-w-none prose-p:mb-6 prose-a:text-theme-primary prose-a:font-bold prose-img:mx-auto prose-img:my-12"
           />
           
           <a 
             href={article.url || (article as any).link} 
             target="_blank" 
             rel="noopener noreferrer" 
-            className="inline-flex items-center gap-3 bg-black text-white px-8 py-4 text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition-all cursor-pointer shadow-lg active:scale-95"
+            className="inline-flex items-center gap-3 bg-black text-white px-8 py-4 text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition-all cursor-pointer shadow-lg active:scale-95 rounded-sm"
           >
             Original Source <ExternalLink size={14} />
           </a>
